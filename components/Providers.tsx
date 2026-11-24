@@ -1,8 +1,9 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useState } from "react";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { AuthProvider } from "@/lib/auth/AuthProvider";
+import { cloudStorage } from "@/lib/supabase";
 
 interface Toast {
   id: number;
@@ -13,6 +14,34 @@ interface Toast {
 const ToastContext = createContext<(message: string, tone?: Toast["tone"]) => void>(() => {});
 
 export const useToast = () => useContext(ToastContext);
+
+/**
+ * Supabase mode: when another user (or another tab) changes data, the screens re-read it; a background save
+ * that the database refused is shown as an error toast.
+ */
+function CloudSync() {
+  const qc = useQueryClient();
+  const toast = useToast();
+  useEffect(() => {
+    const store = cloudStorage();
+    if (!store) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const offChange = store.onChange(() => {
+      if (timer) return;
+      timer = setTimeout(() => {
+        timer = null;
+        void qc.invalidateQueries();
+      }, 300);
+    });
+    const offError = store.onError((e) => toast(e.message, "error"));
+    return () => {
+      offChange();
+      offError();
+      if (timer) clearTimeout(timer);
+    };
+  }, [qc, toast]);
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [client] = useState(
@@ -28,6 +57,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={client}>
       <ToastContext.Provider value={toast}>
+        <CloudSync />
         <AuthProvider>{children}</AuthProvider>
         <div className="pointer-events-none fixed bottom-20 right-4 z-50 flex flex-col items-end gap-2">
           {toasts.map((t) => (

@@ -1,13 +1,14 @@
+import { cloudEnabled } from "@/lib/supabase/config";
 import { MockAuthService } from "./mock-service";
 import type { AuthService } from "./service";
+import { SupabaseAuthService } from "./supabase-service";
 
 /*
- * The one place that decides how users sign in.
- * To switch to the cloud database:
- *   import { ApiAuthService } from "./api-service";
- *   export const authService: AuthService = new ApiAuthService("/api");
+ * The one place that decides how users sign in:
+ *  - Supabase configured (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY): Supabase Auth via /api/auth/*.
+ *  - Otherwise: logins kept in this browser (demo / offline development).
  */
-export const authService: AuthService = new MockAuthService();
+export const authService: AuthService = cloudEnabled ? new SupabaseAuthService() : new MockAuthService();
 
 export * from "./types";
 export type { AuthService } from "./service";

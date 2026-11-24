@@ -20,6 +20,7 @@ import { PRESETS } from "@/lib/defaults";
 import { useProjects } from "@/lib/projects/hooks";
 import { formatRupee } from "@/lib/money";
 import { defaultFileName, formatLongDate } from "@/lib/template";
+import { cloudEnabled } from "@/lib/supabase/config";
 
 const PAGE_SIZE = 20;
 
@@ -390,7 +391,7 @@ export function Dashboard() {
         ) : null}
 
         <p className="mt-8 text-center text-xs text-slate-400">
-          Storage: {quotationRepo.label} – data stays in this browser until the database is connected.
+          {cloudEnabled ? "Storage: Supabase cloud database." : `Storage: ${quotationRepo.label} – data stays in this browser until the database is connected.`}
           {quotationRepo.resetDemoData ? (
             <>
               {" "}
@@ -398,8 +399,14 @@ export function Dashboard() {
                 type="button"
                 className="font-medium text-slate-500 underline hover:text-slate-700"
                 onClick={() => {
-                  if (!confirm("Replace all quotations in this session with the demo data?")) return;
-                  reset.mutate(undefined, { onSuccess: () => toast("Demo data restored") });
+                  const question = cloudEnabled
+                    ? "Replace ALL data in the cloud database (every module, for every user) with the demo data? This can’t be undone."
+                    : "Replace all quotations in this session with the demo data?";
+                  if (!confirm(question)) return;
+                  reset.mutate(undefined, {
+                    onSuccess: () => toast("Demo data restored"),
+                    onError: (e) => toast(e instanceof Error ? e.message : String(e), "error"),
+                  });
                 }}
               >
                 Reset demo data

@@ -12,6 +12,7 @@ import { flushPendingSave, useQuotationStore } from "@/lib/store";
 import { fileStore } from "@/lib/files";
 import { migrateInlineFiles } from "@/lib/files/migrate";
 import { appStorage } from "@/lib/storage";
+import { cloudEnabled } from "@/lib/supabase/config";
 import { useSettings } from "@/lib/settings/hooks";
 import { NotificationBell } from "./NotificationBell";
 
@@ -43,8 +44,9 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   const supervisor = useIsSupervisor();
 
   const qc = useQueryClient();
-  // Files saved inline by earlier versions move to the browser file store once.
+  // Files saved inline by earlier versions move to the browser file store once (browser storage only).
   useEffect(() => {
+    if (cloudEnabled) return;
     void migrateInlineFiles(appStorage(), fileStore)
       .then((n) => {
         if (n) void qc.invalidateQueries();

@@ -1,14 +1,13 @@
 import { authService } from "@/lib/auth";
 import { quotationRepo } from "@/lib/data";
 import { SessionStorageRepository } from "@/lib/data/session-repo";
+import { cloudEnabled, withCloudSync } from "@/lib/supabase";
 import type { CrmRepository } from "./repository";
 import { SessionStorageCrmRepository } from "./session-repo";
 
 /*
- * The one place that decides where clients and enquiries are stored.
- * To switch to the cloud database:
- *   import { ApiCrmRepository } from "./api-repo";
- *   export const crmRepo: CrmRepository = new ApiCrmRepository("/api");
+ * The one place that decides where clients and enquiries are stored: lib/storage (Supabase when configured,
+ * otherwise this browser).
  */
 function create(): CrmRepository {
   if (!(quotationRepo instanceof SessionStorageRepository))
@@ -17,10 +16,12 @@ function create(): CrmRepository {
     quotes: quotationRepo,
     getActor: async () => (await authService.getSession())?.user.id ?? "unknown",
     isAdmin: async () => (await authService.getSession())?.user.role === "admin",
+    seed: !cloudEnabled,
+    latencyMs: cloudEnabled ? 0 : undefined,
   });
 }
 
-export const crmRepo: CrmRepository = create();
+export const crmRepo: CrmRepository = withCloudSync(create());
 
 export * from "./types";
 export type { CrmRepository, LinkResult } from "./repository";

@@ -1,9 +1,11 @@
 /**
- * Browser storage used by the temporary (pre-database) repositories.
+ * Storage used by the repositories.
  *
- * Data (quotations, CRM, employees, logins) lives in localStorage so it survives closing the tab.
- * The sign-in session lives in sessionStorage, so every tab signs in separately.
+ * With Supabase configured (NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY) the data lives in the
+ * Supabase database, synced through lib/supabase/sync-storage.ts. Without it, data lives in localStorage.
+ * The sign-in session lives in sessionStorage either way, so every tab signs in separately.
  */
+import { cloudStorage } from "@/lib/supabase";
 
 /** Minimal subset of the Web Storage API so tests can pass an in-memory store. */
 export interface KeyValueStorage {
@@ -39,8 +41,13 @@ export function migrateSessionToLocal(from: EnumerableStorage, to: EnumerableSto
 
 let migrated = false;
 
-/** Persistent app data store (localStorage). */
+/**
+ * Persistent app data store: the Supabase database when it is configured (see lib/supabase),
+ * otherwise this browser's localStorage.
+ */
 export function appStorage(): KeyValueStorage {
+  const cloud = cloudStorage();
+  if (cloud) return cloud;
   if (!migrated && typeof window !== "undefined") {
     migrated = true;
     try {

@@ -62,6 +62,19 @@ export interface Actor {
 }
 
 /**
+ * Where login passwords are kept. Browser version: a PBKDF2 hash in the login record. Supabase version: the
+ * password is set in Supabase Auth by the server, and the record keeps only a marker.
+ */
+export interface LoginBackend {
+  /** Sets the login's password; returns the value to keep in Login.passwordHash. */
+  setPassword(employeeId: string, password: string): Promise<string>;
+  /** Called after a login was deleted with its employee. */
+  remove?(employeeId: string): Promise<void>;
+}
+
+export const browserLogins: LoginBackend = { setPassword: (_employeeId, password) => hashPassword(password) };
+
+/**
  * TEMPORARY employee store in the browser's localStorage. Replace with ApiEmployeeRepository
  * (lib/employees/api-repo.ts) when the cloud database is ready. Admin checks here only protect the
  * UI; the real API must enforce them on the server.
@@ -74,6 +87,7 @@ export class LocalEmployeeRepository implements EmployeeRepository {
     private readonly getActor: () => Promise<Actor | null>,
     private readonly latencyMs = 150,
     private readonly now: () => number = () => Date.now(),
+    private readonly passwords: LoginBackend = browserLogins,
   ) {}
 
   private async delay() {
@@ -389,8 +403,10 @@ export class LocalEmployeeRepository implements EmployeeRepository {
       throw new ValidationError(["This employee has linked records (enquiries, quotations or log entries). Deactivate them instead."]);
     if (confirmName.trim() !== e.fullName) throw new ValidationError(["Type the employee's full name exactly to confirm."]);
     this.guardAdminAccess(id, "deleted");
+    const hadLogin = this.people.logins().some((l) => l.employeeId === id);
     this.people.saveEmployees(list.filter((x) => x.id !== id));
     this.people.saveLogins(this.people.logins().filter((l) => l.employeeId !== id));
+    if (hadLogin) await this.passwords.remove?.(id);
   }
 
   async checkMobile(mobile: string, excludeId?: string) {
@@ -455,7 +471,7 @@ export class LocalEmployeeRepository implements EmployeeRepository {
       username,
       role: opts.role,
       enabled: true,
-      passwordHash: await hashPassword(temporaryPassword),
+      passwordHash: await this.passwords.setPassword(employeeId, temporaryPassword),
       mustChangePassword: opts.mustChangePassword,
       failedAttempts: 0,
       lockedUntil: null,
@@ -481,7 +497,7 @@ export class LocalEmployeeRepository implements EmployeeRepository {
     const temporaryPassword = generateTemporaryPassword();
     const updated: Login = {
       ...l,
-      passwordHash: await hashPassword(temporaryPassword),
+      passwordHash: await this.passwords.setPassword(employeeId, temporaryPassword),
       mustChangePassword: true,
       failedAttempts: 0,
       lockedUntil: null,

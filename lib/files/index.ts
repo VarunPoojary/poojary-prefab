@@ -1,14 +1,15 @@
+import { supabase } from "@/lib/supabase/client";
+import { cloudEnabled } from "@/lib/supabase/config";
 import { IndexedDbFileStore } from "./indexeddb-store";
 import { prepareImage } from "./image";
+import { SupabaseFileStore } from "./supabase-store";
 import type { FileStore, PhotoRef, StoredFileMeta } from "./types";
 
 /*
- * The one place that decides where uploaded files are kept.
- * To switch to cloud storage:
- *   import { ApiFileStore } from "./api-store";
- *   export const fileStore: FileStore = new ApiFileStore("/api");
+ * The one place that decides where uploaded files are kept:
+ * Supabase Storage when Supabase is configured, otherwise this browser's IndexedDB.
  */
-export const fileStore: FileStore = new IndexedDbFileStore();
+export const fileStore: FileStore = cloudEnabled ? new SupabaseFileStore(supabase) : new IndexedDbFileStore();
 
 /** Largest file accepted for upload (photos are shrunk first). */
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -53,7 +54,7 @@ export async function openFile(src: FileSource, view = true) {
   const blob = await fileBlob(src);
   if (!blob) {
     win?.close();
-    throw new Error(`${src.name} could not be found in this browser.`);
+    throw new Error(cloudEnabled ? `${src.name} could not be found in the file storage.` : `${src.name} could not be found in this browser.`);
   }
   const url = URL.createObjectURL(blob);
   if (win) win.location.href = url;

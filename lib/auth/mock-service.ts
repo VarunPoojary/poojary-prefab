@@ -99,6 +99,24 @@ export class MockAuthService implements AuthService {
     this.session().removeItem(SESSION_KEY);
   }
 
+  /**
+   * Starts this tab's session for a login whose password was already checked elsewhere (the Supabase sign-in).
+   * Returns null when the login or its employee doesn't exist.
+   */
+  openSession(employeeId: string, previousLogin: string | null): Session | null {
+    const login = this.people.logins().find((l) => l.employeeId === employeeId);
+    if (!login) return null;
+    const session = this.buildSession(login, token(), new Date(this.now() + SESSION_HOURS * 3600_000).toISOString());
+    if (!session) return null;
+    session.lastLoginAt = previousLogin;
+    this.storeSession(session);
+    return session;
+  }
+
+  storeSession(session: Session) {
+    this.session().setItem(SESSION_KEY, JSON.stringify(session));
+  }
+
   private readStored(): Session | null {
     const raw = this.session().getItem(SESSION_KEY);
     if (!raw) return null;

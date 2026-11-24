@@ -11,6 +11,8 @@ import { expenseRepo } from "@/lib/expenses";
 import { payrollRepo } from "@/lib/payroll";
 import { projectRepo } from "@/lib/projects";
 import { settingsRepo } from "@/lib/settings";
+import { cloudEnabled, cloudStorage } from "@/lib/supabase";
+import { callApi } from "@/lib/supabase/client";
 import { quotationRepo } from "./index";
 import type { ListParams, QuotationRecord, QuotationStatus, UpdatePatch } from "./types";
 
@@ -110,6 +112,12 @@ export function useResetDemoData() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
+      if (cloudEnabled) {
+        // The server replaces every module’s data (and the demo logins and files) in Supabase.
+        await callApi("/api/admin/reset-demo", {});
+        await cloudStorage()?.reload();
+        return;
+      }
       await quotationRepo.resetDemoData?.();
       await crmRepo.resetDemoData?.();
       await employeeRepo.resetDemoData?.();

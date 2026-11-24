@@ -14,13 +14,14 @@ A web app for running Poojary Prefab Pvt. Ltd.: from the first client enquiry, t
 | Employees | Employees | Admin | Employee records, logins, salaries, documents |
 | Settings | Settings | Admin | Task templates, lists, attendance and payroll settings |
 
-> **Storage today:** all data is kept in this browser (localStorage, files in IndexedDB) behind repository layers that
-> will be switched to a cloud database later – see [Architecture & data](#architecture--data). Each browser has its own
-> data; clearing browser data or **Reset demo data** starts again from the demo data.
+> **Storage:** with Supabase configured (see [Connect Supabase](#connect-supabase)) all data, logins and files are kept
+> in the Supabase project and shared by every user and device. Without it the app falls back to this browser
+> (localStorage, files in IndexedDB): each browser has its own data, and clearing browser data or **Reset demo data**
+> starts again from the demo data. See [Architecture & data](#architecture--data).
 
 ## Contents
 
-1. [Run it](#run-it)
+1. [Run it](#run-it) – [Connect Supabase](#connect-supabase)
 2. [Demo accounts & demo data](#demo-accounts--demo-data)
 3. [Roles & permissions](#roles--permissions)
 4. [Modules](#modules) – [Sign-in](#1-sign-in-navigation--my-account) · [Quotations](#2-quotation-maker) ·
@@ -46,6 +47,33 @@ Production build: `npm run build && npm start`. To build while `npm run dev` is 
 
 After pulling new code, restart `npm run dev` (new pages) and use **Reset demo data** if the demo data has changed.
 
+### Connect Supabase
+
+1. Create a project at [supabase.com](https://supabase.com) (region close to India, e.g. Mumbai).
+2. **Create the tables:** Supabase dashboard → *SQL Editor* → paste and run
+   [`supabase/migrations/20261124000000_init.sql`](supabase/migrations/20261124000000_init.sql), then
+   [`supabase/migrations/20261124000001_grants.sql`](supabase/migrations/20261124000001_grants.sql) (or `supabase db push`
+   with the Supabase CLI). They create `app_records`, `file_meta`, the table privileges, the row level security
+   policies, realtime and the private Storage bucket `files`. *permission denied for table app_records* means the
+   second file has not been run.
+3. **Keys:** copy `.env.example` to `.env.local` and fill in from *Project Settings → API*: the project URL, the
+   publishable / anon key and the service-role / secret key. The service-role key is used only by the server (API routes
+   and the seed script) – never give it a `NEXT_PUBLIC_` name.
+4. **Starting data** (replaces everything; add `--force` if the database already has data):
+
+   ```bash
+   npm run db:seed -- --demo                                          # demo data + demo logins (below)
+   npm run db:seed -- --starter --username admin@poojary.net --password '<first password>'   # real use: one admin, no demo records
+   ```
+
+   With `--starter` the admin is the demo director's employee record (edit it in Employees) and must choose a new
+   password at first sign-in.
+5. Restart `npm run dev`. The Quotation Maker footer shows *Storage: Supabase cloud database*.
+
+For a demo project you can also set `NEXT_PUBLIC_SHOW_DEMO_ACCOUNTS=true` (demo logins on the login page) and
+`ALLOW_DEMO_RESET=true` (lets an admin use **Reset demo data**, which then replaces **all** data in Supabase). Leave both
+off for the real database. When deploying (e.g. Vercel), set the same variables in the host's environment settings.
+
 ---
 
 ## Demo accounts & demo data
@@ -64,7 +92,9 @@ Sign in at `/login` with the **username** (or the employee's mobile number) and 
 
 **Reset demo data:** Quotation Maker list (`/quotations`) → **Reset demo data**. It reloads every module's demo data
 (quotations, clients, enquiries, employees, projects, attendance, expenses, payroll, settings, notifications) and
-clears stored files. Do this before a sanity run so the steps below match.
+clears stored files. Do this before a sanity run so the steps below match. With Supabase it works only when the server
+has `ALLOW_DEMO_RESET=true`, replaces the data for **every** user and resets the demo logins' passwords
+(`npm run db:seed -- --demo --force` does the same from the command line).
 
 What the demo data contains (dates are relative to today):
 
@@ -102,7 +132,10 @@ What the demo data contains (dates are relative to today):
 *Site manager* = the project manager, or a team member with the role **Site engineer / Erection supervisor**
 (between their team from / to dates). *Supervisors* are chosen in Settings → Attendance.
 
-Permission checks run in the browser today; the future server must enforce them too.
+Permission checks run in the app. With Supabase the database also enforces the coarse rules (row level security):
+only enabled logins can read or change anything; logins, employees, lookups and settings only admins; payroll only
+admins and the Accountant. The finer rules (team membership, the 7-day window, …) are not yet enforced by the database
+– see [Architecture & data](#architecture--data).
 
 ---
 
@@ -111,7 +144,8 @@ Permission checks run in the browser today; the future server must enforce them 
 ### 1. Sign-in, navigation & My account
 
 - `/login` – username or mobile number + password. No sign-up / forgot password: admins create logins in Employees.
-- Passwords are stored only as hashes (PBKDF2). **5 wrong passwords lock the login for 15 minutes.**
+- Passwords are stored only as hashes (Supabase Auth; PBKDF2 in browser-only mode). **5 wrong passwords lock the
+  login for 15 minutes** (checked by the server route `/api/auth/login`).
 - A login with a temporary password must choose a new one at `/change-password` before anything else.
 - Every page except login requires sign-in; opening a link while signed out goes to login and then back to the link.
 - The session lasts 8 hours or until the tab is closed (each tab signs in separately). It is re-checked on every page
@@ -330,7 +364,8 @@ related page.
 ### 11. Files
 
 Uploads (enquiry attachments, employee documents, project documents, progress / note / attendance photos, expense
-bills) are kept in the browser's **IndexedDB**; records keep only a file id. Photos are shrunk on the device (longest
+bills) are kept in the private Supabase Storage bucket `files` (browser-only mode: **IndexedDB**); records keep only a
+file id. Photos are shrunk on the device (longest
 side 1600 px) and the time taken is read from the photo. Limit 10 MB per file. Quotation photos live inside the
 quotation because they are drawn into the PDF.
 
@@ -542,10 +577,34 @@ in as, the steps and the expected result (✅). To switch user: avatar → **Log
 
 ## Architecture & data
 
-Every module talks to storage through a **repository interface**. Today each uses a browser implementation; a
-ready-made API implementation with its REST endpoints documented sits next to it. Switching to the cloud = build the
-endpoints and change one line in the module's `index.ts`. Screens use React Query hooks (`hooks.ts`) and never touch
-storage directly.
+Every module talks to storage through a **repository interface**; screens use React Query hooks (`hooks.ts`) and
+never touch storage directly. The repositories (with all business rules) work on `lib/storage.ts`, which is either
+the **Supabase database** or this browser's localStorage – chosen by whether `NEXT_PUBLIC_SUPABASE_URL` /
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` are set.
+
+### Supabase mode
+
+| Part | Where | How |
+|---|---|---|
+| Data | table `app_records` | One row per record: `collection` (the storage key, e.g. `pppl.projects.v1`), `id`, `data` (JSONB), `pos` (list order). Counters, lookups and settings are one row with id `$value`. Key → id field map: `lib/supabase/collections.ts` |
+| Sync | `lib/supabase/sync-storage.ts` | After sign-in all rows are loaded into memory; a change writes only the rows that changed; every repository is wrapped (`withCloudSync`) so a save resolves only once the database accepted it – if it refuses, the list is re-read and the error is shown. Other users' changes arrive by Supabase Realtime and the screens refresh |
+| Sign-in | Supabase Auth + `app/api/auth/*` | Each login is a Supabase Auth user (internal e-mail `<employee id>@users.poojary-prefab.app`, `app_metadata.employee_id`). `/api/auth/login` finds the login by username / mobile, applies the lockout and the disabled check, then returns the Supabase session. `/api/auth/change-password` changes the user's own password. Role, enabled, must-change and session version stay in the login record |
+| Login admin | `app/api/admin/logins` | Create login / reset password set the temporary password in Supabase Auth (admins only, service-role key on the server) |
+| Files | Storage bucket `files`, table `file_meta` | `lib/files/supabase-store.ts` |
+| Starting data | `npm run db:seed`, `app/api/admin/reset-demo` | `lib/supabase/demo-data.ts` builds the data with the same repositories and seeds |
+| Security | `supabase/migrations/…_init.sql` | RLS: enabled logins read everything; logins / employees / lookups / settings writable by admins only; payroll by admins and the Accountant; everything else by any enabled login. A disabled login loses database access at once |
+
+**Known limits (next steps):** the finer permission rules (staff see only their projects, no money for staff, the
+7-day attendance window, …) still run only in the app – a signed-in user calling the Supabase API directly could
+read all data (including salaries) and change records outside the admin/payroll lists. Codes and counters (EXP, PRJ,
+ENQ numbers) are handed out by the browser, so two users creating at the same second could collide. Moving those rules
+into Postgres functions / per-table RLS, or into server routes, is the way to close this. Data saved earlier in a
+browser's localStorage is not copied to Supabase automatically.
+
+### Browser-only mode (no Supabase settings)
+
+The table below shows each module's switch file and implementations; the `api-repo.ts` files are an alternative REST
+implementation kept for reference.
 
 | Module | Switch | Browser implementation | API implementation | Rules (reuse on the server) |
 |---|---|---|---|---|
@@ -567,9 +626,10 @@ storage directly.
 `pppl.site-days.v1`, `pppl.casual-workers.v1`, `pppl.attendance-holidays.v1`, `pppl.expenses.v1`,
 `pppl.expense-counter.v1`, `pppl.payroll-months.v1`, `pppl.payroll-payments.v1`, `pppl.payroll-batches.v1`,
 `pppl.payroll-log.v1`, `pppl.settings.v1`, `pppl.notifications.v1`; the sign-in session is in sessionStorage
-(`pppl.session.v1`). Files are in IndexedDB.
+(`pppl.session.v1`). Files are in IndexedDB. In Supabase mode the same keys are the `collection` values in
+`app_records`, and the Supabase session is in sessionStorage (`pppl.supabase-auth`).
 
-**Moving to the cloud database – what the server must do**
+**Full server-side rules – what is still to move to the database / server** (partly done with Supabase, see above)
 
 - **Sign-in:** hash passwords, enforce the lockout and session version; add `proxy.ts` for server-side route checks
   with an httpOnly cookie (see the Next.js authentication guide in `node_modules/next/dist/docs`).
@@ -612,6 +672,9 @@ Suggested tables: `quotations`, `clients`, `client_contacts`, `enquiries`, `enqu
 | Attendance statuses, edit window (7 days), reminder times, photo distance | `lib/attendance/config.ts` |
 | Expense statuses, payment modes, future-date limit, budget alert levels | `lib/expenses/config.ts` |
 | Payroll divisor (30), payment modes, due day | `lib/payroll/calc.ts`, `lib/payroll/config.ts` |
+| Supabase tables, row level security, Storage bucket | `supabase/migrations/` |
+| Supabase keys and options | `.env.local` (see `.env.example`), `lib/supabase/config.ts` |
+| Which role may change which collection in Supabase | `app_can_write()` in `supabase/migrations/…_init.sql` |
 
 Quotation template text can use `{{placeholders}}` filled from form values (full list in `templateVars()` in
 `lib/template.ts`, e.g. `{{gstRate}}`, `{{advancePct}}`, `{{validUntil}}`). A line starting with `- ` becomes a bullet,
