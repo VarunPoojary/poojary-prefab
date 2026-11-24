@@ -1,0 +1,23 @@
+export const COMPANY = {
+  name: "Poojary Prefab Pvt. Ltd.",
+  legalName: "Poojary Prefab Private Limited",
+  shortName: "PPPL",
+  cin: "CIN NO. U45400PN2010PTC135723",
+  tagline: "Dry, Fast & Green Building Construction Technology",
+  certification: "An ISO 9001-2015 & ISO 14001-2015 certified Company",
+  address: "Factory & H.O: Gat no.1424, Wagholi, Lohegaon Road, Pune 421 207 (India)",
+  phones: "+91 9545 5507 02/03 | +91 9764 7707 00",
+  footerPhone: "+91 9764770700",
+  brandLine: "BUILT WITH PRECISION. BACKED BY TRUST.",
+  email: "info@poojary.net",
+  website: "www.poojary.net",
+  signatory: { name: "Naresh S Poojary", designation: "Director" },
+  assets: {
+    logo: "/brand/logo.jpg",
+    logoMark: "/brand/logo-mark.png",
+    watermark: "/brand/watermark.png",
+    signature: "/brand/signature.png",
+    stamp: "/brand/stamp.png",
+    samplePhotos: ["/brand/similar-building-1.jpg", "/brand/similar-building-2.jpg"],
+  },
+} as const;

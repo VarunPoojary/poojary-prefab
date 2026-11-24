@@ -1,0 +1,7 @@
+- Login Page -> No sign Up/ Registration page needed -> Only admin can create new user
+-
+
+
+
+
+In Cover Letter Page, in the letter body, create only 1 editor instead of para wise
