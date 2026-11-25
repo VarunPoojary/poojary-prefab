@@ -1,11 +1,296 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+/*
+ * Poojary Prefab brand theme, taken from poojary.net.
+ * Montserrat for the interface, JetBrains Mono for reference numbers and figures.
+ * The palettes below replace Tailwind's defaults, so existing classes (slate-*, red-*, …) pick up the brand:
+ *   slate   → near neutral grey with a hint of warmth (galvanised steel, drawing paper); slate-900 ≈ brand ink #2B2B2B
+ *   red     → oxblood, the one accent; red-700 = logo #71090D, red-900 = brand #480A0B
+ *   emerald, amber, sky, violet → toned down semantic colours that sit inside the palette
+ */
+@theme {
+  --font-sans: var(--font-montserrat), "Segoe UI", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "Cascadia Mono", Consolas, monospace;
+
+  --color-slate-50: #f7f6f5;
+  --color-slate-100: #efeeec;
+  --color-slate-200: #e4e2df;
+  --color-slate-300: #cfccc8;
+  --color-slate-400: #a29e99;
+  --color-slate-500: #75716c;
+  --color-slate-600: #5c5853;
+  --color-slate-700: #45423e;
+  --color-slate-800: #34312e;
+  --color-slate-900: #2b2826;
+  --color-slate-950: #1c1a18;
+
+  --color-red-50: #faf3f2;
+  --color-red-100: #f4e3e1;
+  --color-red-200: #e9c6c3;
+  --color-red-300: #d69b97;
+  --color-red-400: #bf6560;
+  --color-red-500: #a53b37;
+  --color-red-600: #8b201e;
+  --color-red-700: #71090d;
+  --color-red-800: #5a0a0c;
+  --color-red-900: #480a0b;
+  --color-red-950: #2e0607;
+
+  --color-emerald-50: #eef6f1;
+  --color-emerald-100: #d9ece0;
+  --color-emerald-200: #b5d9c3;
+  --color-emerald-300: #86bf9c;
+  --color-emerald-400: #57a274;
+  --color-emerald-500: #3a8658;
+  --color-emerald-600: #2c6e47;
+  --color-emerald-700: #235a3a;
+  --color-emerald-800: #1d4a30;
+  --color-emerald-900: #183d28;
+
+  --color-amber-50: #fbf6ea;
+  --color-amber-100: #f5e9c9;
+  --color-amber-200: #ecd597;
+  --color-amber-300: #ddb95e;
+  --color-amber-400: #c99a35;
+  --color-amber-500: #b07f22;
+  --color-amber-600: #8f6419;
+  --color-amber-700: #714e16;
+  --color-amber-800: #5c4015;
+  --color-amber-900: #4b3513;
+
+  --color-sky-50: #f0f4f7;
+  --color-sky-100: #dfe7ee;
+  --color-sky-200: #c0cfdc;
+  --color-sky-300: #96afc3;
+  --color-sky-400: #6b8ca6;
+  --color-sky-500: #4f718c;
+  --color-sky-600: #3e5b73;
+  --color-sky-700: #33495c;
+  --color-sky-800: #2b3d4d;
+  --color-sky-900: #253441;
+
+  --color-violet-50: #f4f2f6;
+  --color-violet-100: #e7e3ec;
+  --color-violet-200: #cfc7d9;
+  --color-violet-300: #ac9fbd;
+  --color-violet-400: #87779c;
+  --color-violet-500: #6a5b80;
+  --color-violet-600: #564969;
+  --color-violet-700: #463c55;
+  --color-violet-800: #3a3246;
+  --color-violet-900: #302a3a;
+
+  /* Light theme depth: small, neutral, soft. */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 16px 40px rgba(0, 0, 0, 0.12);
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
+  background: var(--color-slate-50);
+  color: var(--color-slate-900);
   font-family: var(--font-sans);
+}
+
+/* Figures line up in every table and money cell. */
+table,
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Montserrat runs wide: data tables use 13px so columns keep their lines. */
+table.text-sm {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+}
+
+/*
+ * Dropdowns: the browser's own arrow sits tight against the right edge. Draw one chevron with room around it
+ * (12px from the edge) and keep text clear of it. Unlayered, so it wins over the px-* utilities on selects.
+ */
+select:not([multiple]):not([size]) {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2375716c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 1rem;
+  padding-right: 2.25rem;
+  text-overflow: ellipsis;
+}
+select:not([multiple]):not([size]):disabled {
+  opacity: 0.6;
+}
+
+/* Thin, quiet scrollbars in scrolling panels. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-slate-300) transparent;
+}
+
+/* One visible focus ring for keyboard users, in the brand accent. */
+:where(a, button, summary, [role="switch"], [tabindex]):focus-visible {
+  outline: 2px solid var(--color-red-700);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* On the burgundy top bar the focus ring is white so it stays visible. */
+header :where(a, button, summary, [tabindex]):focus-visible {
+  outline-color: #fff;
+}
+
+/* Phones: 16px text in fields so iOS Safari does not zoom the page when a field is focused. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/*
+ * List filter rows: on phones the dropdowns sit two per row at equal width instead of a ragged wrap;
+ * the search box and anything marked data-span take the full row.
+ */
+@media (max-width: 639px) {
+  .filter-bar > :is(select, label, div, input) {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .filter-bar > :is(input[type="search"], [data-span]) {
+    flex-basis: 100%;
+  }
+  .filter-bar > select {
+    height: 2.5rem;
+  }
+}
+
+/*
+ * Stacked tables: below 768px each row becomes a card on a two-column grid. Cells stack in source order across
+ * the full width; data-half cells take one of two equal columns; data-label shows a small label above the value;
+ * data-menu (row actions or status) sits top-right beside the row's first cell; data-mobile-hide and empty cells
+ * disappear. .has-select: the first cell is a row checkbox, pinned to the left edge of the card.
+ * .stack-flush: the table already sits inside a padded card. Unlayered, so it beats min-w / px / text-* utilities.
+ */
+@media (max-width: 767px) {
+  table.stack-table,
+  table.stack-table > tbody,
+  table.stack-table > tfoot {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  table.stack-table > thead {
+    display: none;
+  }
+  table.stack-table > tbody > tr,
+  table.stack-table > tfoot > tr {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 0.75rem;
+    row-gap: 0.625rem;
+    padding: 0.875rem 1rem;
+  }
+  table.stack-table > tbody > tr > td,
+  table.stack-table > tfoot > tr > td {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 0;
+    min-width: 0;
+    max-width: none;
+    white-space: normal;
+    text-align: left;
+  }
+  table.stack-table td:empty,
+  table.stack-table td[data-mobile-hide] {
+    display: none;
+  }
+  table.stack-table td[data-half],
+  table.stack-table > tfoot > tr > td[data-label] {
+    grid-column: auto;
+  }
+  table.stack-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.125rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-slate-500);
+  }
+  /* Row actions / status: top-right, with the row's first cell (its title) beside it. */
+  table.stack-table > tbody > tr > td[data-menu] {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: start;
+  }
+  table.stack-table > tbody > tr:has(> td[data-menu]) > td:first-child:not([data-index]) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  table.stack-table.has-select > tbody > tr:has(> td[data-menu]) > td:nth-child(2) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  /* A row-number cell opens the card: "Row 3". */
+  table.stack-table > tbody > tr > td[data-index] {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    font-weight: 500;
+    color: var(--color-slate-700);
+  }
+  table.stack-table > tbody > tr > td[data-index]::before {
+    content: "Row ";
+  }
+  /* Row checkbox pinned to the card's left edge; the card content moves right to make room. */
+  table.stack-table.has-select > tbody > tr {
+    padding-left: 2.75rem;
+  }
+  table.stack-table.has-select > tbody > tr > td:first-child {
+    grid-area: auto;
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+  }
+  table.stack-table.stack-flush > tbody > tr,
+  table.stack-table.stack-flush > tfoot > tr {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  /* Totals: the label across the top, figures in two columns beneath. */
+  table.stack-table > tfoot > tr > td:first-child {
+    font-weight: 500;
+  }
+}
+
+/* Drawing-number style used for codes like PRJ-2026-001 and offer numbers. */
+.ref-code {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
 }

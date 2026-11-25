@@ -14,6 +14,8 @@ import { currentStage, todayIso } from "@/lib/projects/rules";
 import type { Project, StageKey } from "@/lib/projects/types";
 import { dayLabel } from "@/lib/attendance/rules";
 import { BillPicker, MoneyField, PaymentFields, blankPayment, issuesOf, rupee } from "./bits";
+import { HardHat, TriangleAlert, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 type Mode = "request" | "add" | "edit";
 
@@ -47,7 +49,7 @@ function CasualPanel({ fill, lines, onLines }: { fill: CasualFill; lines: Casual
       {!fill.lines.length ? <p className="text-sm text-slate-600">No casual workers are marked present at this site on this day.</p> : null}
       {lines.length ? (
         <table className="w-full text-sm">
-          <thead className="text-left text-xs uppercase text-slate-500">
+          <thead className="text-left text-xs text-slate-500">
             <tr>
               <th className="py-1">Worker</th>
               <th>Status</th>
@@ -74,7 +76,7 @@ function CasualPanel({ fill, lines, onLines }: { fill: CasualFill; lines: Casual
                 <td className="text-right tabular-nums">{rupee(l.amountPaise)}</td>
                 <td className="text-right">
                   <button type="button" aria-label={`Remove ${l.name}`} className="px-2 text-xs text-slate-400 hover:text-red-700" onClick={() => onLines(lines.filter((_, j) => j !== i))}>
-                    ✕
+                    <Icon icon={X} size={16} />
                   </button>
                 </td>
               </tr>
@@ -205,12 +207,12 @@ export function ExpenseDialog({ project, mode, expense, initialFill, onClose }: 
         </>
       }
     >
-      <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+      <div className="space-y-4">
         {!expense ? (
           <div className="flex flex-wrap items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm">
             <span className="text-slate-700">Casual (daily-wage) labour?</span>
             <Button size="sm" disabled={loadingFill} onClick={() => void loadCasual(f.date > todayIso() ? todayIso() : f.date)}>
-              👷 Fill from attendance for {dayLabel(f.date > todayIso() ? todayIso() : f.date)}
+              <Icon icon={HardHat} size={14} className="mr-1 inline-block align-[-2px]" />Fill from attendance for {dayLabel(f.date > todayIso() ? todayIso() : f.date)}
             </Button>
             {isCasual ? (
               <button type="button" className="text-xs text-slate-500 hover:underline" onClick={() => (setFill(null), set("casual", null))}>
@@ -226,7 +228,7 @@ export function ExpenseDialog({ project, mode, expense, initialFill, onClose }: 
           </p>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <TextField
             label="Date of expense"
             required
@@ -263,8 +265,8 @@ export function ExpenseDialog({ project, mode, expense, initialFill, onClose }: 
         </div>
 
         {shownDups.length ? (
-          <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" data-testid="duplicate-warning">
-            ⚠️ Possible duplicate: {shownDups.map((d) => `${d.code} (${d.why})`).join("; ")}. You can still save.
+          <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" data-testid="duplicate-warning">
+            <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />Possible duplicate: {shownDups.map((d) => `${d.code} (${d.why})`).join("; ")}. You can still save.
           </div>
         ) : null}
 

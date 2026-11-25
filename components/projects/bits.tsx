@@ -2,10 +2,12 @@
 
 import { PROJECT_STATUSES, stageMeta } from "@/lib/projects/config";
 import type { ProjectStatus, StageKey } from "@/lib/projects/types";
+import { Flag } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   const m = PROJECT_STATUSES.find((s) => s.value === status)!;
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-lg px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
 }
 
 export function ProgressBar({ pct, className = "", tone }: { pct: number; className?: string; tone?: "red" | "green" | "slate" }) {
@@ -21,8 +23,8 @@ export function ProgressBar({ pct, className = "", tone }: { pct: number; classN
 export function BehindFlag({ behind, label = "Behind schedule" }: { behind: boolean; label?: string }) {
   if (!behind) return null;
   return (
-    <span title={label} aria-label={label} className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800">
-      🚩 Behind
+    <span title={label} aria-label={label} className="inline-flex items-center gap-1 rounded-lg bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-800">
+      <Icon icon={Flag} size={14} className="mr-1 inline-block align-[-2px]" />Behind
     </span>
   );
 }

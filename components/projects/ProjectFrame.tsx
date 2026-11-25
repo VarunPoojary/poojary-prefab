@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronLeft, Lock, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,6 +20,7 @@ import { currentStage, forecastCompletion, moneyTotals, projectBehind, projectPc
 import { PROJECT_TABS, projectTabHref, type ProjectTab } from "@/lib/projects/tabs";
 import type { Project, ProjectStatus } from "@/lib/projects/types";
 import { BehindFlag, ProgressBar, ProjectStatusBadge, pctText, stageLabel } from "./bits";
+import { Icon } from "@/components/ui/icons";
 
 const issuesOf = (e: unknown) => (e && typeof e === "object" && "issues" in e ? (e as { issues: string[] }).issues : [e instanceof Error ? e.message : String(e)]);
 
@@ -75,7 +77,7 @@ function WarningBanner({ project, isAdmin }: { project: Project; isAdmin: boolea
     <div role="alert" data-testid="enquiry-warning" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>
-          ⚠️ <b>Linked enquiry is no longer Finalised.</b> {isAdmin ? "Keep the project or cancel it." : "An admin will decide whether to keep this project."}
+          <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" /><b>Linked enquiry is no longer Finalised.</b> {isAdmin ? "Keep the project or cancel it." : "An admin will decide whether to keep this project."}
         </span>
         {isAdmin ? (
           <span className="flex gap-2">
@@ -121,7 +123,7 @@ function WarningBanner({ project, isAdmin }: { project: Project; isAdmin: boolea
 function SummaryTile({ label, children, testId }: { label: string; children: React.ReactNode; testId?: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white px-3 py-2" data-testid={testId}>
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[11px] font-semibold text-slate-500">{label}</div>
       <div className="mt-0.5 text-sm font-semibold text-slate-900">{children}</div>
     </div>
   );
@@ -180,15 +182,20 @@ export function ProjectFrame({ active, children }: { active: ProjectTab["key"]; 
 
   return (
     <PageContainer wide>
-      <Link href="/projects" className="mb-2 inline-block text-xs font-medium text-slate-500 hover:text-slate-800">
-        ← Projects
+      <Link
+        href="/projects"
+        className="-ml-1 mb-2 inline-flex h-8 items-center gap-1 rounded-lg pl-1 pr-2 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+      >
+        <Icon icon={ChevronLeft} size={14} />
+        Projects
       </Link>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="flex flex-wrap items-center gap-2 text-xl font-semibold text-slate-900">
-            <span className="text-slate-500">{p.code}</span> {p.name} <ProjectStatusBadge status={p.status} /> <BehindFlag behind={behind} />
+          <div className="ref-code text-slate-500">{p.code}</div>
+          <h1 className="mt-0.5 flex flex-wrap items-center gap-2 text-[22px] font-medium leading-tight text-slate-900 sm:text-[28px]">
+            <span>{p.name}</span> <ProjectStatusBadge status={p.status} /> <BehindFlag behind={behind} />
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-500">
             {client ? (
               <Link href={`/clients/${client.id}`} className="hover:underline">
                 {client.name}
@@ -240,26 +247,26 @@ export function ProjectFrame({ active, children }: { active: ProjectTab["key"]; 
       ) : null}
       {readyToComplete && isAdmin ? (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          <span>🎉 Handover has reached 100%. Mark the project Completed?</span>
+          <span>Handover has reached 100%. Mark the project Completed?</span>
           <Button size="sm" variant="primary" onClick={() => setStatusOpen("completed")}>
             Mark completed
           </Button>
         </div>
       ) : null}
 
-      <nav className="mb-5 flex gap-1 overflow-x-auto border-b border-slate-200" aria-label="Project sections">
+      <nav className="mb-5 grid grid-cols-4 border-b border-slate-200 sm:flex sm:gap-1" aria-label="Project sections">
         {PROJECT_TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             aria-current={t.key === active ? "page" : undefined}
             onClick={() => (t.locked ? toast(`${t.label} — coming soon`) : router.push(projectTabHref(p.id, t.key)))}
-            className={`-mb-px flex shrink-0 items-center gap-1 border-b-2 px-4 py-2.5 text-sm font-medium ${
+            className={`-mb-px flex h-11 min-w-0 items-center justify-center gap-1 border-b-2 px-1 text-[13px] font-medium transition-colors sm:shrink-0 sm:px-4 sm:text-sm ${
               t.key === active ? "border-red-700 text-red-800" : "border-transparent text-slate-500 hover:text-slate-800"
             } ${t.locked ? "cursor-not-allowed opacity-60" : ""}`}
           >
             {t.label}
-            {t.locked ? <span aria-label="coming soon">🔒</span> : null}
+            {t.locked ? <span aria-label="coming soon"><Icon icon={Lock} size={14} className="mr-1 inline-block align-[-2px]" /></span> : null}
           </button>
         ))}
       </nav>

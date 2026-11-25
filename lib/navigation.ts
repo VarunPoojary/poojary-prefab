@@ -4,7 +4,6 @@ export interface NavItem {
   key: string;
   label: string;
   href: string;
-  icon: string;
   description: string;
   /** Roles allowed to see the item; omit for everyone. */
   roles?: Role[];
@@ -13,13 +12,12 @@ export interface NavItem {
   status: "ready" | "soon";
 }
 
-/** Modules shown in the ☰ menu. Add new modules here. */
+/** Modules shown in the menu. Add new modules here. */
 export const NAV_ITEMS: NavItem[] = [
   {
     key: "enquiries",
     label: "Enquiries",
     href: "/enquiries",
-    icon: "📋",
     description: "Track every enquiry to a win or loss",
     roles: ["admin", "staff"],
     status: "ready",
@@ -28,7 +26,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "clients",
     label: "Clients",
     href: "/clients",
-    icon: "🏢",
     description: "Client list and contact persons",
     roles: ["admin", "staff"],
     status: "ready",
@@ -37,7 +34,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "quotations",
     label: "Quotation Maker",
     href: "/quotations",
-    icon: "📄",
     description: "Create, edit and download quotations",
     roles: ["admin", "staff"],
     status: "ready",
@@ -46,7 +42,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "projects",
     label: "Projects",
     href: "/projects",
-    icon: "🏗️",
     description: "Won orders from design to handover",
     roles: ["admin", "staff"],
     status: "ready",
@@ -55,7 +50,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "my-tasks",
     label: "My tasks",
     href: "/my-tasks",
-    icon: "☑️",
     description: "Project tasks assigned to you",
     roles: ["admin", "staff"],
     status: "ready",
@@ -64,7 +58,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "attendance",
     label: "Attendance",
     href: "/attendance",
-    icon: "🗓️",
     description: "Daily attendance of all employees",
     roles: ["admin"],
     supervisors: true,
@@ -74,7 +67,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "payroll",
     label: "Payroll",
     href: "/payroll",
-    icon: "💰",
     description: "Salaries, advances and payments",
     roles: ["admin", "accountant"],
     status: "ready",
@@ -83,7 +75,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "expenses",
     label: "Expenses",
     href: "/expenses",
-    icon: "💸",
     description: "Project expenses: approve and pay",
     roles: ["admin", "accountant"],
     status: "ready",
@@ -92,7 +83,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "employees",
     label: "Employees",
     href: "/employees",
-    icon: "👥",
     description: "Employee records and logins",
     roles: ["admin"],
     status: "ready",
@@ -101,7 +91,6 @@ export const NAV_ITEMS: NavItem[] = [
     key: "settings",
     label: "Settings",
     href: "/settings",
-    icon: "⚙️",
     description: "Project task templates and lists",
     roles: ["admin"],
     status: "ready",

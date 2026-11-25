@@ -25,7 +25,7 @@ export function AccountScreen() {
   return (
     <PageContainer>
       <PageHeader title="My account" />
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <Card title="Profile">
           <dl className="space-y-2 text-sm">
             {rows.map(([k, v]) => (

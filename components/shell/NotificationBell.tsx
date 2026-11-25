@@ -3,28 +3,30 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { AlertTriangle, Banknote, Bell, BellRing, CalendarDays, ChartColumn, ClipboardCheck, Layers, MessageSquare, Receipt, ReceiptText, Wallet } from "lucide-react";
+import { Icon, type LucideIcon } from "@/components/ui/icons";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useNotifications } from "@/lib/crm/hooks";
 import { relativeTime } from "@/lib/format";
 import { useAppNotifications, useMarkRead } from "@/lib/notifications/hooks";
 import type { NotificationKind } from "@/lib/notifications/types";
 
-const ICONS: Record<NotificationKind, string> = {
-  project_created: "🏗️",
-  mention: "💬",
-  task_assigned: "☑️",
-  milestone_overdue: "💰",
-  enquiry_reopened: "⚠️",
-  attendance_due: "🗓️",
-  expense_requested: "💸",
-  expense_decided: "🧾",
-  budget_alert: "📊",
-  payroll_due: "💰",
+const ICONS: Record<NotificationKind, LucideIcon> = {
+  project_created: Layers,
+  mention: MessageSquare,
+  task_assigned: ClipboardCheck,
+  milestone_overdue: Banknote,
+  enquiry_reopened: AlertTriangle,
+  attendance_due: CalendarDays,
+  expense_requested: Receipt,
+  expense_decided: ReceiptText,
+  budget_alert: ChartColumn,
+  payroll_due: Wallet,
 };
 
 const POPUPS_KEY = "pppl.popups-shown.v1";
 
-/** 🔔 Stored notifications (project created, @mentions, tasks, overdue payments) plus enquiry follow-ups. */
+/** Bell: stored notifications (project created, @mentions, tasks, overdue payments) plus enquiry follow-ups. */
 export function NotificationBell() {
   const { user } = useAuth();
   const router = useRouter();
@@ -80,20 +82,20 @@ export function NotificationBell() {
           setNow(Date.now());
           setOpen((v) => !v);
         }}
-        className="relative flex h-9 w-9 items-center justify-center rounded-full text-lg text-slate-600 hover:bg-slate-100"
+        className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white/90 transition-colors hover:bg-white/10 hover:text-white"
       >
-        🔔
+        <Icon icon={Bell} size={18} />
         {count ? (
           <span
             data-testid="bell-count"
-            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-700 px-1 text-[10px] font-bold text-white"
+            className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-lg bg-white px-1 font-mono text-[11px] font-semibold leading-none text-red-900 ring-2 ring-red-900"
           >
             {count}
           </span>
         ) : null}
       </button>
       {open ? (
-        <div className="absolute right-0 mt-2 w-[22rem] max-w-[calc(100vw-1.5rem)] rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="fixed inset-x-3 top-14 mt-1 rounded-xl border border-slate-200 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-[22rem]">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
             <span className="text-sm font-semibold text-slate-900">Notifications</span>
             {unread ? (
@@ -105,10 +107,11 @@ export function NotificationBell() {
           {permission === "default" ? (
             <button
               type="button"
-              className="block w-full border-b border-slate-100 bg-sky-50 px-4 py-2 text-left text-xs font-medium text-sky-900 hover:bg-sky-100"
+              className="flex w-full items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2 text-left text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100"
               onClick={() => void Notification.requestPermission().then(setPermission)}
             >
-              🔔 Turn on pop-up reminders for site attendance
+              <Icon icon={BellRing} size={14} className="text-slate-500" />
+              Turn on pop-up reminders for site attendance
             </button>
           ) : null}
           <div className="max-h-[28rem] overflow-y-auto">
@@ -123,21 +126,23 @@ export function NotificationBell() {
                         setOpen(false);
                         router.push(n.href);
                       }}
-                      className={`flex w-full gap-3 px-4 py-2.5 text-left hover:bg-slate-50 ${n.readAt ? "" : "bg-red-50/40"}`}
+                      className="flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50"
                     >
-                      <span className="text-base">{ICONS[n.kind]}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className={`block text-sm ${n.readAt ? "text-slate-700" : "font-semibold text-slate-900"}`}>{n.title}</span>
-                        <span className="block truncate text-xs text-slate-500">{n.body}</span>
-                        <span className="block text-[11px] text-slate-400">{relativeTime(n.createdAt, now)}</span>
+                      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500">
+                        <Icon icon={ICONS[n.kind]} size={14} />
                       </span>
-                      {!n.readAt ? <span aria-label="unread" className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-600" /> : null}
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm ${n.readAt ? "text-slate-600" : "font-medium text-slate-900"}`}>{n.title}</span>
+                        <span className="block truncate text-xs text-slate-500">{n.body}</span>
+                        <span className="mt-0.5 block text-xs text-slate-500">{relativeTime(n.createdAt, now)}</span>
+                      </span>
+                      {!n.readAt ? <span aria-label="unread" className="mt-2 h-2 w-2 shrink-0 rounded-full bg-red-700" /> : null}
                     </button>
                   </li>
                 ))}
               </ul>
             ) : null}
-            <div className="border-t border-slate-100 bg-slate-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="border-t border-slate-100 bg-slate-50 px-4 py-2 text-xs font-medium text-slate-500">
               Enquiry follow-ups
             </div>
             {followUps.length ? (
@@ -146,7 +151,7 @@ export function NotificationBell() {
                   <li key={n.enquiryId}>
                     <Link href={`/enquiries/${n.enquiryId}`} onClick={() => setOpen(false)} className="block px-4 py-2.5 hover:bg-slate-50">
                       <div className="flex items-center justify-between gap-2 text-sm">
-                        <span className="font-semibold text-slate-900">{n.number}</span>
+                        <span className="ref-code font-medium text-slate-900">{n.number}</span>
                         <span className="text-xs font-medium text-red-700">{n.reason}</span>
                       </div>
                       <div className="truncate text-xs text-slate-600">
@@ -157,13 +162,13 @@ export function NotificationBell() {
                 ))}
               </ul>
             ) : (
-              <p className="px-4 py-3 text-center text-xs text-slate-500">No follow-ups due.</p>
+              <p className="px-4 py-3 text-center text-xs text-slate-500">No follow-ups due</p>
             )}
           </div>
           <Link
             href="/enquiries?followUp=1"
             onClick={() => setOpen(false)}
-            className="block border-t border-slate-100 px-4 py-2 text-center text-xs font-medium text-red-700 hover:bg-red-50"
+            className="block rounded-b-xl border-t border-slate-100 px-4 py-2.5 text-center text-xs font-medium text-red-700 transition-colors hover:bg-slate-50"
           >
             View all enquiries needing follow-up
           </Link>

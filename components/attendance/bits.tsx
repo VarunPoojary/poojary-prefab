@@ -5,7 +5,7 @@ import type { AttendanceStatus, Counts } from "@/lib/attendance/types";
 
 export function AttendanceBadge({ status }: { status: AttendanceStatus | null }) {
   const m = status ? statusMeta(status) : NOT_LOGGED;
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-lg px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
 }
 
 /** Four big buttons: Present / Half day / Absent / Holiday (phone-friendly). */
@@ -20,7 +20,7 @@ export function StatusButtons({ value, onChange, name }: { value: AttendanceStat
           aria-checked={value === s.value}
           aria-label={`${s.label} – ${name}`}
           onClick={() => onChange(s.value)}
-          className={`rounded-md px-1 py-2 text-xs font-semibold ${value === s.value ? s.button : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+          className={`rounded-lg px-1 py-2 text-xs font-semibold ${value === s.value ? s.button : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
         >
           {s.label}
         </button>

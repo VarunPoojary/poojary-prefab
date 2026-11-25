@@ -10,6 +10,8 @@ import { ROLE_LABELS, type Role } from "@/lib/auth/types";
 import { useCreateLogin, useEmployeeLogin, useResetPassword, useSetLoginEnabled, useSetRole } from "@/lib/employees/hooks";
 import type { CreatedLogin, Employee } from "@/lib/employees/types";
 import { formatDateTime } from "@/lib/format";
+import { Lock } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 const ROLES: { value: Role; label: string }[] = [
   { value: "staff", label: "Staff – quotations, enquiries and clients" },
@@ -41,7 +43,7 @@ function PasswordReveal({ employee, created, onClose }: { employee: Employee; cr
         <dl className="rounded-lg bg-slate-50 p-3">
           <InfoRow label="Username">{created.login.username}</InfoRow>
           <InfoRow label="Temporary password">
-            <code data-testid="temp-password" className="rounded bg-white px-2 py-0.5 font-mono text-base font-semibold tracking-wider">
+            <code data-testid="temp-password" className="rounded bg-white px-2 py-0.5 font-mono text-base font-semibold ">
               {created.temporaryPassword}
             </code>
           </InfoRow>
@@ -143,7 +145,7 @@ export function LoginCard({ employee, autoCreate }: { employee: Employee; autoCr
                 {login.enabled ? (
                   <span className="font-medium text-emerald-700">Enabled</span>
                 ) : (
-                  <span className="font-medium text-slate-500">🔒 Disabled</span>
+                  <span className="font-medium text-slate-500"><Icon icon={Lock} size={14} className="mr-1 inline-block align-[-2px]" />Disabled</span>
                 )}
                 {login.lockedUntil && new Date(login.lockedUntil).getTime() > now ? (
                   <span className="ml-2 text-xs text-amber-700">(locked after failed attempts until {formatDateTime(login.lockedUntil)})</span>

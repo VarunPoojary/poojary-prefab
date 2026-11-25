@@ -1,11 +1,13 @@
 "use client";
 
+import { CalendarDays, EllipsisVertical, Plus, Scale } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ErrorList, useUserName } from "@/components/crm/ui";
 import { PhotoPicker, PhotoThumbs } from "@/components/files/Files";
 import { useToast } from "@/components/Providers";
 import { Button, Card, NumberField, Select, TextArea, TextField } from "@/components/ui/fields";
+import { Icon, STAGE_ICONS } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/overlays";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import type { PhotoRef } from "@/lib/files";
@@ -131,7 +133,7 @@ export function UpdateDialog({ projectId, task, onClose, onDone }: { projectId: 
           />
         ) : null}
         <TextArea label={check.delta < 0 ? "Correction note *" : "Remarks"} rows={2} value={remarks} onChange={setRemarks} />
-        <PhotoPicker photos={photos} onChange={setPhotos} label="📷 Add site photos" />
+        <PhotoPicker photos={photos} onChange={setPhotos} label="Add site photos" />
         <ErrorList issues={issues} />
       </div>
     </Modal>
@@ -157,7 +159,7 @@ function TaskSheet({ project, stage, task, onClose }: { project: Project; stage:
           <Button onClick={onClose}>Close</Button>
           {canUpdate ? (
             <Button variant="primary" onClick={() => setUpdating(true)}>
-              + Add update
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add update
             </Button>
           ) : null}
         </>
@@ -182,7 +184,7 @@ function TaskSheet({ project, stage, task, onClose }: { project: Project; stage:
         </div>
       </div>
       {prod ? (
-        <p className="mb-3 rounded-md bg-sky-50 px-3 py-2 text-sm text-sky-900" data-testid="productivity">
+        <p className="mb-3 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900" data-testid="productivity">
           Productivity: <b>{prod.perManDay.toFixed(2)} {task.unit} per man-day</b>{" "}
           <span className="text-xs">
             ({fmtNum(prod.quantity)} {task.unit} over {prod.days} day{prod.days === 1 ? "" : "s"} with {fmtNum(prod.manDays)} site man-days logged)
@@ -190,7 +192,7 @@ function TaskSheet({ project, stage, task, onClose }: { project: Project; stage:
         </p>
       ) : null}
       {task.blocked ? (
-        <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800">
+        <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
           Blocked: {task.blocked.reason} <span className="text-xs">({userName(task.blocked.by)}, {formatDate(task.blocked.at)})</span>
         </p>
       ) : null}
@@ -277,17 +279,17 @@ function TaskDialog({ project, stage, task, onClose }: { project: Project; stage
         </>
       }
     >
-      <div className="grid max-h-[65vh] gap-4 overflow-y-auto sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {!task && suggestions.length ? (
           <div className="sm:col-span-2">
-            <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-600">Suggested for this stage</div>
+            <div className="mb-1 text-xs font-semibold text-slate-600">Suggested for this stage</div>
             <div className="flex flex-wrap gap-1.5">
               {suggestions.map((s) => (
                 <button
                   key={s.key}
                   type="button"
                   onClick={() => set({ name: s.name, templateKey: s.key, measure: s.measure, unit: s.unit, total: s.measure === "percent" ? 100 : null })}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${f.templateKey === s.key ? "bg-red-700 text-white ring-red-700" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50"}`}
+                  className={`rounded-lg px-3 py-1 text-xs font-medium ring-1 ${f.templateKey === s.key ? "bg-red-700 text-white ring-red-700" : "bg-white text-slate-700 ring-slate-300 hover:bg-slate-50"}`}
                 >
                   {s.name}
                 </button>
@@ -297,7 +299,7 @@ function TaskDialog({ project, stage, task, onClose }: { project: Project; stage
         ) : null}
         <TextField className="sm:col-span-2" label="Task name" required value={f.name} onChange={(v) => set({ name: v, templateKey: null })} />
         <div className="sm:col-span-2">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
+          <div className="mb-1 text-xs font-semibold text-slate-600">
             Measurement type<span className="text-red-600">*</span>
           </div>
           <div className="flex gap-2" role="radiogroup" aria-label="Measurement type">
@@ -396,8 +398,8 @@ function WeightsDialog({ project, onClose }: { project: Project; onClose: () => 
       <div className="space-y-2">
         {STAGES.map((s) => (
           <div key={s.key} className="flex items-center justify-between gap-3">
-            <span className="text-sm">
-              {s.icon} {s.label}
+            <span className="flex items-center gap-2 text-sm">
+              <Icon icon={STAGE_ICONS[s.key]} className="text-slate-500" /> {s.label}
             </span>
             <div className="w-28">
               <NumberField value={w[s.key]} onChange={(v) => setW({ ...w, [s.key]: v })} suffix="%" />
@@ -444,17 +446,17 @@ function StageDatesDialog({ project, onClose }: { project: Project; onClose: () 
             : "Set the planned completion date to get suggested stage dates."}
         </span>
         <Button size="sm" disabled={!canSuggest} onClick={() => setD(suggestStageDates(project.startDate, project.plannedCompletion))}>
-          ✨ Suggest dates
+          Suggest dates
         </Button>
       </div>
       <div className="space-y-2">
         {STAGES.map((s) => (
           <div key={s.key} className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_10rem_10rem]">
-            <span className="text-sm">
-              {s.icon} {s.label}
+            <span className="flex items-center gap-2 text-sm">
+              <Icon icon={STAGE_ICONS[s.key]} className="text-slate-500" /> {s.label}
             </span>
-            <input type="date" aria-label={`${s.label} planned start`} value={d[s.key].start} onChange={(e) => setD({ ...d, [s.key]: { ...d[s.key], start: e.target.value } })} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
-            <input type="date" aria-label={`${s.label} planned end`} value={d[s.key].end} onChange={(e) => setD({ ...d, [s.key]: { ...d[s.key], end: e.target.value } })} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
+            <input type="date" aria-label={`${s.label} planned start`} value={d[s.key].start} onChange={(e) => setD({ ...d, [s.key]: { ...d[s.key], start: e.target.value } })} className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm" />
+            <input type="date" aria-label={`${s.label} planned end`} value={d[s.key].end} onChange={(e) => setD({ ...d, [s.key]: { ...d[s.key], end: e.target.value } })} className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm" />
           </div>
         ))}
       </div>
@@ -523,17 +525,17 @@ function SCurveChart({ project }: { project: Project }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Planned versus actual progress">
         {[0, 25, 50, 75, 100].map((v) => (
           <g key={v}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="#e2e8f0" />
-            <text x={pad.l - 6} y={y(v) + 3} textAnchor="end" fontSize="9" fill="#64748b">
+            <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} stroke="var(--color-slate-200)" />
+            <text x={pad.l - 6} y={y(v) + 3} textAnchor="end" fontSize="10" fill="var(--color-slate-500)" fontFamily="var(--font-mono)">
               {v}%
             </text>
           </g>
         ))}
-        {todayIdx > 0 ? <line x1={x(todayIdx)} x2={x(todayIdx)} y1={pad.t} y2={H - pad.b} stroke="#94a3b8" strokeDasharray="3 3" /> : null}
-        <polyline points={line("planned")} fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="5 4" />
-        <polyline points={line("actual")} fill="none" stroke="#b91c1c" strokeWidth="2.5" />
+        {todayIdx > 0 ? <line x1={x(todayIdx)} x2={x(todayIdx)} y1={pad.t} y2={H - pad.b} stroke="var(--color-slate-400)" strokeDasharray="3 3" /> : null}
+        <polyline points={line("planned")} fill="none" stroke="var(--color-slate-400)" strokeWidth="1.5" strokeDasharray="5 4" strokeLinecap="round" strokeLinejoin="round" />
+        <polyline points={line("actual")} fill="none" stroke="var(--color-red-700)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         {[0, Math.floor((points.length - 1) / 2), points.length - 1].map((i) => (
-          <text key={i} x={x(i)} y={H - 8} textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} fontSize="9" fill="#64748b">
+          <text key={i} x={x(i)} y={H - 8} textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"} fontSize="10" fill="var(--color-slate-500)" fontFamily="var(--font-mono)">
             {formatDate(points[i].date)}
           </text>
         ))}
@@ -570,7 +572,7 @@ function TaskRow({ project, stage, task, onOpen, onUpdate, onEdit }: { project: 
         <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
           <span className="block font-medium text-slate-900">{task.name}</span>
           <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-            <span className={`rounded-full px-2 py-0.5 font-semibold ${STATUS_CHIP[status][1]}`}>{STATUS_CHIP[status][0]}</span>
+            <span className={`rounded-lg px-2 py-0.5 font-semibold ${STATUS_CHIP[status][1]}`}>{STATUS_CHIP[status][0]}</span>
             <BehindFlag behind={behind} />
             {task.measure === "quantity" ? (
               task.total ? (
@@ -591,13 +593,13 @@ function TaskRow({ project, stage, task, onOpen, onUpdate, onEdit }: { project: 
         <div className="flex items-center gap-1">
           {active && status !== "completed" ? (
             <Button variant="primary" onClick={onUpdate}>
-              + Update
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Update
             </Button>
           ) : null}
           {active ? (
             <details className="relative">
-              <summary aria-label={`More for ${task.name}`} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md text-lg text-slate-500 hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
-                ⋮
+              <summary aria-label={`More for ${task.name}`} className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg text-lg text-slate-500 hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
+                <Icon icon={EllipsisVertical} size={16} />
               </summary>
               <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
                 <button type="button" className="block w-full px-3 py-2 text-left text-sm hover:bg-slate-50" onClick={onEdit}>
@@ -687,15 +689,15 @@ function StageCard({
       <button type="button" onClick={onToggle} aria-expanded={open} className="w-full p-4 text-left">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-semibold text-slate-900">
-              {meta.icon} {meta.label}
+            <h3 className="flex items-center gap-2 font-semibold text-slate-900">
+              <Icon icon={STAGE_ICONS[meta.key]} className="text-slate-500" /> {meta.label}
             </h3>
             <p className="text-xs text-slate-500">
               {stage.notApplicable ? "Not applicable" : `Weight ${stage.weight}%${Math.round(weight) !== stage.weight ? ` (${weight.toFixed(1)}% after rescaling)` : ""}`} · {stage.tasks.length} task{stage.tasks.length === 1 ? "" : "s"}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-lg font-bold text-slate-900" data-testid="stage-pct">
+            <div className="text-lg font-semibold tabular-nums text-slate-900" data-testid="stage-pct">
               {stage.notApplicable ? "N/A" : pctText(pct)}
             </div>
             <BehindFlag behind={behind} />
@@ -736,7 +738,7 @@ function StageCard({
               <span />
             )}
             {editable && !stage.notApplicable ? (
-              <Button onClick={() => setDialog("add")}>+ Add task</Button>
+              <Button onClick={() => setDialog("add")}><Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add task</Button>
             ) : null}
           </div>
           {stage.tasks.length ? (
@@ -827,11 +829,11 @@ export function ProjectProgress({ p }: { p: Project }) {
       {isAdmin && p.status === "active" ? (
         <div className="flex flex-wrap justify-end gap-2">
           {unplanned ? <span className="mr-auto self-center text-sm text-amber-800">Stages have no planned dates yet – needed for behind-schedule checks.</span> : null}
-          <Button onClick={() => setDialog("dates")}>📅 Plan stage dates</Button>
-          <Button onClick={() => setDialog("weights")}>⚖️ Edit weights</Button>
+          <Button onClick={() => setDialog("dates")}><Icon icon={CalendarDays} size={14} className="mr-1 inline-block align-[-2px]" />Plan stage dates</Button>
+          <Button onClick={() => setDialog("weights")}><Icon icon={Scale} size={14} className="mr-1 inline-block align-[-2px]" />Edit weights</Button>
         </div>
       ) : null}
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {p.stages.map((s) => (
           <StageCard
             key={s.key}

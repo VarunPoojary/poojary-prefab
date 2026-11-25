@@ -1,15 +1,18 @@
 "use client";
 
 import React, { useId, useState } from "react";
+import { ArrowDown, ArrowUp, X } from "lucide-react";
+import { Icon } from "./icons";
 
+/** 16px text on phones stops iOS from zooming into a focused field; 14px from the sm breakpoint. */
 const inputCls =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base text-slate-900 outline-none transition-[border-color,box-shadow] placeholder:text-slate-400 focus:border-red-700 focus:ring-3 focus:ring-red-700/10 disabled:bg-slate-100 disabled:text-slate-500 sm:text-sm";
 
 export function Label({ htmlFor, children, required }: { htmlFor?: string; children: React.ReactNode; required?: boolean }) {
   return (
-    <label htmlFor={htmlFor} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+    <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-medium text-slate-700">
       {children}
-      {required ? <span className="ml-0.5 text-red-600">*</span> : null}
+      {required ? <span className="ml-0.5 text-red-700">*</span> : null}
     </label>
   );
 }
@@ -55,7 +58,7 @@ export function TextField({
         list={list}
         onChange={(e) => onChange(e.target.value)}
       />
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -90,7 +93,7 @@ export function NumberField({
         <input
           id={id}
           inputMode="decimal"
-          className={`${inputCls} text-right ${suffix ? "pr-10" : ""} ${required && value === null ? "border-amber-400" : ""}`}
+          className={`${inputCls} text-right tabular-nums ${suffix ? "pr-10" : ""} ${required && value === null ? "border-amber-400" : ""}`}
           value={text}
           placeholder={placeholder}
           onChange={(e) => {
@@ -102,12 +105,12 @@ export function NumberField({
           }}
         />
         {suffix ? (
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-slate-500">
+          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center font-mono text-xs text-slate-500">
             {suffix}
           </span>
         ) : null}
       </div>
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -154,7 +157,7 @@ export function TextArea({
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
       />
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -178,7 +181,7 @@ export function Select<T extends string>({
           </option>
         ))}
       </select>
-      {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="mt-1.5 text-xs text-slate-500">{hint}</p> : null}
     </div>
   );
 }
@@ -203,10 +206,10 @@ export function Toggle({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${checked ? "bg-red-700" : "bg-slate-300"}`}
+        className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${checked ? "bg-red-700" : "bg-slate-300"}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition ${checked ? "translate-x-4" : "translate-x-0.5"}`}
+          className={`inline-block h-4 w-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"}`}
         />
       </button>
       <span>
@@ -246,14 +249,14 @@ export function Card({
   className?: string;
 }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className ?? ""}`}>
+    <section className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-6 ${className ?? ""}`}>
       {title || actions ? (
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            {title ? <h3 className="text-base font-semibold text-slate-900">{title}</h3> : null}
-            {description ? <p className="mt-0.5 text-sm text-slate-500">{description}</p> : null}
+          <div className="min-w-0">
+            {title ? <h3 className="text-base font-medium text-slate-900">{title}</h3> : null}
+            {description ? <p className="mt-1 text-sm text-slate-500">{description}</p> : null}
           </div>
-          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? <div className="flex min-w-0 max-w-full flex-wrap gap-2">{actions}</div> : null}
         </div>
       ) : null}
       {children}
@@ -281,12 +284,12 @@ export function Button({
   type?: "button" | "submit";
 }) {
   const v = {
-    primary: "bg-red-700 text-white hover:bg-red-800 disabled:bg-red-300",
-    secondary: "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 disabled:text-slate-400",
-    ghost: "text-slate-600 hover:bg-slate-100 disabled:text-slate-300",
+    primary: "bg-red-900 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] hover:bg-red-800 disabled:bg-red-200 disabled:shadow-none",
+    secondary: "border border-slate-300 bg-white text-slate-800 hover:border-slate-400 hover:bg-slate-50 disabled:text-slate-400",
+    ghost: "text-slate-600 hover:bg-slate-100 hover:text-slate-900 disabled:text-slate-300",
     danger: "text-red-700 hover:bg-red-50 disabled:text-slate-300",
   }[variant];
-  const sz = size === "sm" ? "px-2 py-1 text-xs" : "px-4 py-2 text-sm";
+  const sz = size === "sm" ? "h-8 min-w-8 px-2.5 text-xs" : "h-10 px-4 text-sm";
   return (
     <button
       type={type}
@@ -294,7 +297,7 @@ export function Button({
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition disabled:cursor-not-allowed ${v} ${sz}`}
+      className={`inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-medium transition-[background-color,border-color,color,transform] active:scale-[0.98] disabled:cursor-not-allowed disabled:active:scale-100 ${v} ${sz}`}
     >
       {children}
     </button>
@@ -315,20 +318,21 @@ export function RowActions({
 }) {
   return (
     <div className="flex items-center gap-0.5">
-      <Button size="sm" variant="ghost" title="Move up" disabled={index === 0} onClick={() => onMove(index, index - 1)}>
-        ↑
+      <Button size="sm" variant="ghost" title="Move up" aria-label="Move up" disabled={index === 0} onClick={() => onMove(index, index - 1)}>
+        <Icon icon={ArrowUp} size={14} />
       </Button>
       <Button
         size="sm"
         variant="ghost"
         title="Move down"
+        aria-label="Move down"
         disabled={index === count - 1}
         onClick={() => onMove(index, index + 1)}
       >
-        ↓
+        <Icon icon={ArrowDown} size={14} />
       </Button>
-      <Button size="sm" variant="danger" title="Remove" onClick={onRemove}>
-        ✕
+      <Button size="sm" variant="danger" title="Remove" aria-label="Remove" onClick={onRemove}>
+        <Icon icon={X} size={14} />
       </Button>
     </div>
   );

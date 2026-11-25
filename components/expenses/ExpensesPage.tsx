@@ -1,5 +1,7 @@
 "use client";
 
+import { Download } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { EmptyState, LoadingRows, PageContainer, PageHeader, useDebounced, useUserName } from "@/components/crm/ui";
@@ -15,9 +17,9 @@ import { ExpenseRow } from "./ExpenseList";
 import { TotalsBar } from "./ProjectExpenses";
 
 type Tab = "approve" | "pay" | "all";
-const sel = "rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm";
+const sel = "rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm";
 
-/** ☰ Expenses: every project's expenses for Admins (approve, pay) and the Accountant (pay). */
+/** Expenses page: every project's expenses for Admins (approve, pay) and the Accountant (pay). */
 export function ExpensesPage() {
   const toast = useToast();
   const userName = useUserName();
@@ -95,17 +97,17 @@ export function ExpensesPage() {
 
   return (
     <PageContainer wide>
-      <PageHeader title="Expenses" subtitle={isAdmin ? "Every project's expenses: approve requests, record payments, export." : "Record payments for accepted expenses."} actions={<Button onClick={exportCsv}>⬇ Export CSV</Button>} />
+      <PageHeader title="Expenses" subtitle={isAdmin ? "Every project's expenses: approve requests, record payments, export." : "Record payments for accepted expenses."} actions={<Button onClick={exportCsv}><Icon icon={Download} size={16} />Export CSV</Button>} />
       <div className="mb-4 flex flex-wrap gap-2" role="tablist">
         {tabs
           .filter(([, , show]) => show)
           .map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={current === k} onClick={() => setTabAnd(k)} className={`rounded-full px-4 py-1.5 text-sm font-medium ${current === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}>
+            <button key={k} type="button" role="tab" aria-selected={current === k} onClick={() => setTabAnd(k)} className={`rounded-lg px-4 py-1.5 text-sm font-medium ${current === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}>
               {l}
             </button>
           ))}
       </div>
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      <div className="filter-bar mb-3 flex flex-wrap items-center gap-2">
         <input type="search" aria-label="Search expenses" placeholder="Search description, paid to, bill no., requested by…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-[220px] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" />
         <select aria-label="Filter by project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={sel}>
           <option value="">All projects</option>
@@ -171,7 +173,7 @@ export function ExpensesPage() {
       ) : null}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {selectable && items.length ? (
-          <label className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <label className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500">
             <input type="checkbox" aria-label="Select all" className="h-4 w-4 accent-red-700" checked={items.every((e) => selected.includes(e.id))} onChange={(ev) => setSelected(ev.target.checked ? items.map((e) => e.id) : [])} />
             Select all
           </label>

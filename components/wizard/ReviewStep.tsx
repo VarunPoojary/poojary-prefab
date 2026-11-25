@@ -9,6 +9,8 @@ import { formatRupee, amountInWords } from "@/lib/money";
 import { STEPS, useQuotation, useQuotationStore } from "@/lib/store";
 import { defaultFileName, formatLongDate } from "@/lib/template";
 import { validateQuotation } from "@/lib/validate";
+import { Check, Download } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 const PdfPreview = dynamic(() => import("@/components/pdf/PdfPreview"), { ssr: false });
 
@@ -25,7 +27,7 @@ export function ReviewStep() {
   const total = grandTotal(q);
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-[360px_1fr]">
       <div className="space-y-5">
         <Card title="Summary">
           <dl className="space-y-1.5 text-sm">
@@ -37,7 +39,7 @@ export function ReviewStep() {
           </dl>
           <div className="mt-4 rounded-lg bg-slate-900 p-3 text-white">
             <div className="text-xs text-slate-300">Grand total incl. GST</div>
-            <div className="text-lg font-bold tabular-nums">{formatRupee(total)}</div>
+            <div className="text-lg font-semibold tabular-nums">{formatRupee(total)}</div>
             <div className="text-[11px] text-slate-300">{amountInWords(total)}</div>
           </div>
         </Card>
@@ -61,7 +63,7 @@ export function ReviewStep() {
               })}
             </ul>
           ) : (
-            <p className="text-sm text-emerald-700">✓ No problems found.</p>
+            <p className="text-sm text-emerald-700"><Icon icon={Check} size={14} className="mr-1 inline-block align-[-2px]" />No problems found.</p>
           )}
         </Card>
 
@@ -90,12 +92,13 @@ export function ReviewStep() {
                 }
               }}
             >
-              {downloading ? "Preparing PDF…" : "⬇ Download PDF"}
+              <Icon icon={Download} size={16} />
+            {downloading ? "Preparing PDF…" : "Download PDF"}
             </Button>
             {status === "draft" ? (
               <div className="mt-3">
                 <Button size="sm" variant="ghost" onClick={() => setStatus("final")}>
-                  ✓ Mark as final
+                  <Icon icon={Check} size={14} className="mr-1 inline-block align-[-2px]" />Mark as final
                 </Button>
               </div>
             ) : (

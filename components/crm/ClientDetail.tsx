@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/Providers";
@@ -36,7 +38,7 @@ export function ClientDetail() {
           <span className="flex flex-wrap items-center gap-2">
             {c.name}
             {!c.active ? (
-              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-semibold uppercase text-slate-600">Inactive</span>
+              <span className="rounded-lg bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-600">Inactive</span>
             ) : null}
           </span>
         }
@@ -57,13 +59,13 @@ export function ClientDetail() {
             </Button>
             <Button onClick={() => router.push(`/clients/${c.id}/edit`)}>Edit</Button>
             <Button variant="primary" disabled={!c.active} onClick={() => router.push(`/enquiries/new?client=${c.id}`)}>
-              + New enquiry
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> New enquiry
             </Button>
           </>
         }
       />
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5">
           <Card title={`Contacts (${c.contacts.length})`}>
             <ul className="space-y-3">
@@ -72,7 +74,7 @@ export function ClientDetail() {
                   <div className="flex items-center gap-2 font-medium text-slate-900">
                     {p.name}
                     {p.primary ? (
-                      <span className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-800">Primary</span>
+                      <span className="rounded-lg bg-red-50 px-1.5 py-0.5 text-[11px] font-semibold text-red-800">Primary</span>
                     ) : null}
                   </div>
                   <div className="text-xs text-slate-500">{labelOf(CONTACT_ROLES, p.role)}</div>
@@ -113,7 +115,7 @@ export function ClientDetail() {
                 {enquiries.data.items.map((e) => (
                   <li key={e.id}>
                     <Link href={`/enquiries/${e.id}`} className="flex flex-wrap items-center gap-3 py-2.5 text-sm hover:bg-slate-50">
-                      <span className="w-28 font-semibold text-slate-900">{e.number}</span>
+                      <span className="ref-code w-32 font-medium text-slate-900">{e.number}</span>
                       <span className="min-w-0 flex-1 truncate text-slate-700">{e.projectName}</span>
                       <StatusBadge status={e.status} />
                       <span className="w-28 text-right tabular-nums text-slate-900">{e.latestValue !== null ? formatRupee(e.latestValue) : "–"}</span>
@@ -134,7 +136,7 @@ export function ClientDetail() {
                 {projects.data.map((p) => (
                   <li key={p.id}>
                     <Link href={`/projects/${p.id}/details`} className="flex flex-wrap items-center gap-3 py-2.5 text-sm hover:bg-slate-50">
-                      <span className="w-28 font-semibold text-slate-900">{p.code}</span>
+                      <span className="ref-code w-32 font-medium text-slate-900">{p.code}</span>
                       <span className="min-w-0 flex-1 truncate text-slate-700">{p.name}</span>
                       <ProjectStatusBadge status={p.status} />
                       <span className="w-24 text-right text-xs font-semibold text-slate-700">{Math.round(p.progress)}% done</span>
@@ -178,11 +180,11 @@ export function ClientDetail() {
 
 export function QuoteStatus({ status, sentAt }: { status: "draft" | "final"; sentAt: string | null }) {
   const [label, cls] = sentAt
-    ? ["Sent", "bg-violet-100 text-violet-800"]
+    ? ["Sent", "bg-sky-100 text-sky-900"]
     : status === "final"
       ? ["Final", "bg-emerald-100 text-emerald-800"]
       : ["Draft", "bg-amber-100 text-amber-800"];
-  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${cls}`}>{label}</span>;
+  return <span className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{label}</span>;
 }
 
 export function NotFound({ what }: { what: string }) {

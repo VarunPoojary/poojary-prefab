@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import { ChevronLeft } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { statusMeta } from "@/lib/crm/config";
 import { useUsers } from "@/lib/crm/hooks";
 import type { EnquiryStatus } from "@/lib/crm/types";
@@ -9,7 +11,7 @@ import type { EnquiryStatus } from "@/lib/crm/types";
 export function StatusBadge({ status, className = "" }: { status: EnquiryStatus; className?: string }) {
   const m = statusMeta(status);
   return (
-    <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${m.badge} ${className}`}>
+    <span className={`inline-flex h-6 items-center whitespace-nowrap rounded-lg px-2 text-xs font-medium ${m.badge} ${className}`}>
       {m.label}
     </span>
   );
@@ -37,16 +39,20 @@ export function PageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5">
+    <div className="mb-6">
       {back ? (
-        <Link href={back.href} className="mb-2 inline-block text-xs font-medium text-slate-500 hover:text-slate-800">
-          ← {back.label}
+        <Link
+          href={back.href}
+          className="-ml-1 mb-2 inline-flex h-8 items-center gap-1 rounded-lg pl-1 pr-2 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+        >
+          <Icon icon={ChevronLeft} size={14} />
+          {back.label}
         </Link>
       ) : null}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
-          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-          {subtitle ? <div className="mt-0.5 text-sm text-slate-500">{subtitle}</div> : null}
+          <h1 className="text-[22px] font-medium leading-tight text-slate-900 sm:text-[28px]">{title}</h1>
+          {subtitle ? <div className="mt-1 text-sm text-slate-500">{subtitle}</div> : null}
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
@@ -55,13 +61,13 @@ export function PageHeader({
 }
 
 export function PageContainer({ children, wide }: { children: React.ReactNode; wide?: boolean }) {
-  return <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 py-6 sm:px-6`}>{children}</div>;
+  return <div className={`mx-auto w-full ${wide ? "max-w-7xl" : "max-w-5xl"} px-4 py-6 sm:px-6 sm:py-8 lg:px-8`}>{children}</div>;
 }
 
 export function ErrorList({ issues }: { issues: string[] }) {
   if (!issues.length) return null;
   return (
-    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+    <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
       <ul className="list-disc space-y-0.5 pl-4">
         {issues.map((i) => (
           <li key={i}>{i}</li>
@@ -147,8 +153,8 @@ export function SearchSelect({
   if (selectedLabel) {
     return (
       <div>
-        {label ? <div className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">{label}</div> : null}
-        <div className="flex items-center justify-between gap-2 rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm">
+        {label ? <div className="mb-1.5 block text-[13px] font-medium text-slate-700">{label}</div> : null}
+        <div className="flex min-h-10 items-center justify-between gap-2 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm">
           <span className="truncate font-medium text-slate-900">{selectedLabel}</span>
           {onClear ? (
             <button type="button" className="text-xs font-medium text-red-700 hover:underline" onClick={onClear}>
@@ -168,7 +174,7 @@ export function SearchSelect({
   return (
     <div ref={ref} className="relative">
       {label ? (
-        <label htmlFor={id} className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+        <label htmlFor={id} className="mb-1.5 block text-[13px] font-medium text-slate-700">
           {label}
         </label>
       ) : null}
@@ -199,10 +205,10 @@ export function SearchSelect({
             pick(options[active].value);
           } else if (e.key === "Escape") setOpen(false);
         }}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base outline-none transition-[border-color,box-shadow] placeholder:text-slate-400 focus:border-red-700 focus:ring-3 focus:ring-red-700/10 sm:text-sm"
       />
       {open ? (
-        <div className="absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+        <div className="absolute z-30 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
           <ul id={`${id}-list`} role="listbox">
             {options.map((o, i) => (
               <li
@@ -214,7 +220,7 @@ export function SearchSelect({
                   pick(o.value);
                 }}
                 onMouseEnter={() => setActive(i)}
-                className={`flex cursor-pointer items-start justify-between gap-3 px-3 py-2 text-sm ${i === active ? "bg-red-50" : ""}`}
+                className={`flex cursor-pointer items-start justify-between gap-3 rounded-lg px-3 py-2 text-sm ${i === active ? "bg-slate-100" : ""}`}
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium text-slate-900">{o.label}</span>
@@ -225,7 +231,7 @@ export function SearchSelect({
             ))}
           </ul>
           {!options.length ? (
-            <div className="px-3 py-2 text-sm text-slate-500">{loading ? "Searching…" : emptyText}</div>
+            <div className="px-3 py-2 text-sm text-slate-500">{loading ? "Searching" : emptyText}</div>
           ) : null}
           {footer ? <div className="border-t border-slate-100 px-2 py-1.5">{footer}</div> : null}
         </div>
@@ -245,8 +251,8 @@ export function useDebounced<T>(value: T, ms = 250) {
 
 export function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex gap-3 py-1 text-sm">
-      <dt className="w-36 shrink-0 text-slate-500">{label}</dt>
+    <div className="flex flex-col gap-0.5 py-1.5 text-sm sm:flex-row sm:gap-3">
+      <dt className="shrink-0 text-slate-500 sm:w-36">{label}</dt>
       <dd className="min-w-0 flex-1 break-words text-slate-900">{children || <span className="text-slate-400">–</span>}</dd>
     </div>
   );

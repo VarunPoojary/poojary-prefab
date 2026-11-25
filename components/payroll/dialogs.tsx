@@ -13,13 +13,15 @@ import { useEmployeePayMonth, usePayrollMutation } from "@/lib/payroll/hooks";
 import type { EmployeeMonthView, MonthStatus, PaymentInput, PayrollPayment, PayrollPaymentMode } from "@/lib/payroll/types";
 import { formatPaise, type Paise } from "@/lib/paise";
 import { todayIso } from "@/lib/projects/rules";
+import { Plus, TriangleAlert, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 export const rupee = (p: Paise) => formatPaise(p);
 export const rupeeExact = (p: Paise) => formatPaise(p, { always: true });
 
 export function MonthBadge({ status }: { status: MonthStatus }) {
   const m = MONTH_STATUSES[status];
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-lg px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
 }
 
 /** ‹ month › picker. */
@@ -29,7 +31,7 @@ export function MonthPicker({ month, onChange, max }: { month: string; onChange:
       <Button aria-label="Previous month" onClick={() => onChange(addMonths(month, -1))}>
         ‹
       </Button>
-      <input type="month" aria-label="Month" value={month} max={max} onChange={(e) => e.target.value && onChange(max && e.target.value > max ? max : e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+      <input type="month" aria-label="Month" value={month} max={max} onChange={(e) => e.target.value && onChange(max && e.target.value > max ? max : e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
       <Button aria-label="Next month" disabled={!!max && month >= max} onClick={() => onChange(addMonths(month, 1))}>
         ›
       </Button>
@@ -41,7 +43,7 @@ const blankPay = (amountPaise: Paise | null = null): PaymentInput => ({ amountPa
 
 function PayFields({ value, onChange, amountLabel = "Amount" }: { value: PaymentInput; onChange: (v: PaymentInput) => void; amountLabel?: string }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <MoneyField label={amountLabel} required value={value.amountPaise} onChange={(amountPaise) => onChange({ ...value, amountPaise })} />
       <TextField label="Date given" type="date" value={value.date} onChange={(date) => onChange({ ...value, date })} />
       <Select<PayrollPaymentMode | ""> label="Mode" value={value.mode} onChange={(mode) => onChange({ ...value, mode })} options={PAYMENT_MODES} />
@@ -85,8 +87,8 @@ export function AdvanceDialog({ employeeId, name, onClose }: { employeeId: strin
         </dl>
         <PayFields value={v} onChange={setV} />
         {over ? (
-          <p role="alert" className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
-            ⚠️ Outstanding advances would be {rupee(outstanding + (v.amountPaise ?? 0))}, more than this month&apos;s estimated salary. Only up to 50 % of the salary is recovered each month; the rest carries forward.
+          <p role="alert" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />Outstanding advances would be {rupee(outstanding + (v.amountPaise ?? 0))}, more than this month&apos;s estimated salary. Only up to 50 % of the salary is recovered each month; the rest carries forward.
           </p>
         ) : null}
         <p className="text-xs text-slate-500">Counted in {monthLabel(month)} and recovered when that month is closed.</p>
@@ -175,7 +177,7 @@ export function CloseMonthDialog({ view, onClose }: { view: EmployeeMonthView; o
         </>
       }
     >
-      <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1 text-sm" data-testid="close-month">
+      <div className="space-y-4 text-sm" data-testid="close-month">
         <div>
           {line("Monthly salary", rupee(live.salaryPaise))}
           {line("Daily rate (÷ 30)", rupeeExact(live.dailyRatePaise))}
@@ -185,23 +187,23 @@ export function CloseMonthDialog({ view, onClose }: { view: EmployeeMonthView; o
           {line("Gross salary", rupee(f.grossPaise), true)}
           {view.adjustmentsIn.map((a) => line(`Adjustment for ${monthLabel(a.fromMonth)} (attendance changed after closing)`, formatPaise(a.amountPaise, { sign: true })))}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <MoneyField label="Advance recovery" value={recovery} onChange={setRecovery} hint={`Outstanding ${rupee(Math.max(0, view.outstandingForMonthPaise))} · at most ${rupee(f.maxRecoveryPaise)} (50 % of gross). The rest carries forward.`} />
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">One-off additions / deductions</span>
+            <span className="text-xs font-semibold text-slate-500">One-off additions / deductions</span>
             <Button size="sm" onClick={() => setOneOffs((x) => [...x, { label: "", amountPaise: 0, reason: "" }])}>
-              + Add line
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add line
             </Button>
           </div>
           {oneOffs.map((o, i) => (
-            <div key={i} className="grid gap-2 rounded-lg border border-slate-200 p-2 sm:grid-cols-[1fr_9rem_1fr_auto]">
+            <div key={i} className="grid grid-cols-1 gap-2 rounded-lg border border-slate-200 p-2 sm:grid-cols-[1fr_9rem_1fr_auto]">
               <TextField value={o.label} onChange={(label) => setOneOffs((x) => x.map((y, j) => (j === i ? { ...y, label } : y)))} placeholder="e.g. Bonus, Damage" />
               <MoneyField allowNegative value={o.amountPaise || null} placeholder="+ add / − deduct" onChange={(amountPaise) => setOneOffs((x) => x.map((y, j) => (j === i ? { ...y, amountPaise: amountPaise ?? 0 } : y)))} />
               <TextField value={o.reason} onChange={(reason) => setOneOffs((x) => x.map((y, j) => (j === i ? { ...y, reason } : y)))} placeholder="Reason" />
               <button type="button" aria-label="Remove line" className="px-2 text-slate-400 hover:text-red-700" onClick={() => setOneOffs((x) => x.filter((_, j) => j !== i))}>
-                ✕
+                <Icon icon={X} size={16} />
               </button>
             </div>
           ))}

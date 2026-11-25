@@ -1,9 +1,11 @@
 "use client";
 
+import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { useState } from "react";
 import { ErrorList, PageContainer, PageHeader } from "@/components/crm/ui";
 import { useToast } from "@/components/Providers";
 import { Button, Card } from "@/components/ui/fields";
+import { Icon, STAGE_ICONS } from "@/components/ui/icons";
 import { LIST_LABELS, STAGES, type ListKey } from "@/lib/projects/config";
 import type { ListItem, Measure, StageKey, TemplateTask } from "@/lib/projects/types";
 import { useUsers } from "@/lib/crm/hooks";
@@ -11,7 +13,7 @@ import { useSaveAttendanceSettings, useSaveList, useSavePayrollSettings, useSave
 import type { AttendanceSettings, PayrollSettings } from "@/lib/settings/types";
 
 const issuesOf = (e: unknown) => (e && typeof e === "object" && "issues" in e ? (e as { issues: string[] }).issues : [e instanceof Error ? e.message : String(e)]);
-const input = "w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100";
+const input = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100";
 
 function move<T>(arr: T[], i: number, d: number) {
   const j = i + d;
@@ -30,7 +32,7 @@ function TemplateEditor({ stage, initial, units }: { stage: StageKey; initial: T
   const dirty = JSON.stringify(rows) !== JSON.stringify(initial);
   const set = (i: number, patch: Partial<TemplateTask>) => setRows((r) => r.map((x, j) => (j === i ? { ...x, ...patch } : x)));
   return (
-    <Card title={`${meta.icon} ${meta.label}`} description={`Default weight ${meta.weight}%`} className="h-fit">
+    <Card title={<span className="flex items-center gap-2"><Icon icon={STAGE_ICONS[meta.key]} className="text-slate-500" />{meta.label}</span>} description={`Default weight ${meta.weight}%`} className="h-fit">
       <ul className="space-y-2" data-testid={`template-${stage}`}>
         {rows.map((t, i) => (
           <li key={t.key || i} className="flex flex-wrap items-center gap-2">
@@ -53,14 +55,14 @@ function TemplateEditor({ stage, initial, units }: { stage: StageKey; initial: T
               <span className="w-28 flex-none text-center text-xs text-slate-500">%</span>
             )}
             <span className="flex flex-none gap-0.5">
-              <button type="button" aria-label="Move up" className="rounded px-1.5 text-slate-500 hover:bg-slate-100" onClick={() => setRows(move(rows, i, -1))}>
-                ↑
+              <button type="button" aria-label="Move up" className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100" onClick={() => setRows(move(rows, i, -1))}>
+                <Icon icon={ArrowUp} size={16} />
               </button>
-              <button type="button" aria-label="Move down" className="rounded px-1.5 text-slate-500 hover:bg-slate-100" onClick={() => setRows(move(rows, i, 1))}>
-                ↓
+              <button type="button" aria-label="Move down" className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100" onClick={() => setRows(move(rows, i, 1))}>
+                <Icon icon={ArrowDown} size={16} />
               </button>
-              <button type="button" aria-label={`Remove ${t.name}`} className="rounded px-1.5 text-slate-400 hover:bg-red-50 hover:text-red-700" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
-                ✕
+              <button type="button" aria-label={`Remove ${t.name}`} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+                <Icon icon={X} size={16} />
               </button>
             </span>
           </li>
@@ -68,7 +70,7 @@ function TemplateEditor({ stage, initial, units }: { stage: StageKey; initial: T
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <Button size="sm" onClick={() => setRows([...rows, { key: "", name: "", measure: "quantity", unit: "Nos" }])}>
-          + Add task
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add task
         </Button>
         {dirty ? (
           <span className="flex gap-2">
@@ -115,20 +117,20 @@ function ListEditor({ listKey, initial }: { listKey: ListKey; initial: ListItem[
               onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
               className={`${input} flex-1 ${it.archived ? "text-slate-400 line-through" : ""}`}
             />
-            <button type="button" aria-label="Move up" className="rounded px-1.5 text-slate-500 hover:bg-slate-100" onClick={() => setRows(move(rows, i, -1))}>
-              ↑
+            <button type="button" aria-label="Move up" className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100" onClick={() => setRows(move(rows, i, -1))}>
+              <Icon icon={ArrowUp} size={16} />
             </button>
             {it.value && initial.some((x) => x.value === it.value) ? (
               <button
                 type="button"
-                className="w-16 rounded px-1.5 text-xs text-slate-500 hover:bg-slate-100"
+                className="h-9 w-16 rounded-lg px-1.5 text-xs text-slate-500 transition-colors hover:bg-slate-100"
                 onClick={() => setRows(rows.map((x, j) => (j === i ? { ...x, archived: !x.archived } : x)))}
                 title={it.archived ? "Use this value again" : "Hide from new entries; old records keep it"}
               >
                 {it.archived ? "Restore" : "Archive"}
               </button>
             ) : (
-              <button type="button" className="w-16 rounded px-1.5 text-xs text-slate-400 hover:bg-red-50 hover:text-red-700" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+              <button type="button" className="h-9 w-16 rounded-lg px-1.5 text-xs text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700" onClick={() => setRows(rows.filter((_, j) => j !== i))}>
                 Remove
               </button>
             )}
@@ -137,7 +139,7 @@ function ListEditor({ listKey, initial }: { listKey: ListKey; initial: ListItem[
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <Button size="sm" onClick={() => setRows([...rows, { value: "", label: "" }])}>
-          + Add
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add
         </Button>
         {dirty ? (
           <span className="flex gap-2">
@@ -167,7 +169,7 @@ function SupervisorPicker({ label, hint, value, onChange }: { label: string; hin
     <fieldset>
       <legend className="text-sm font-semibold text-slate-800">{label}</legend>
       <p className="mb-2 text-xs text-slate-500">{hint}</p>
-      <div className="grid gap-1 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
         {candidates.map((u) => (
           <label key={u.id} className="flex items-center gap-2 text-sm">
             <input type="checkbox" className="accent-red-700" checked={value.includes(u.id)} onChange={(e) => onChange(e.target.checked ? [...value, u.id] : value.filter((x) => x !== u.id))} />
@@ -186,11 +188,11 @@ function AttendanceSettingsEditor({ initial }: { initial: AttendanceSettings }) 
   const [issues, setIssues] = useState<string[]>([]);
   const dirty = JSON.stringify(f) !== JSON.stringify(initial);
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card title="Site attendance reminder" description="Site managers of active projects get a reminder at this time if the day isn't logged; a second one goes out at 10:00 the next morning, also to admins. Projects can set their own time.">
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Default reminder time</span>
-          <input type="time" aria-label="Default reminder time" value={f.reminderTime} onChange={(e) => setF({ ...f, reminderTime: e.target.value })} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          <span className="mb-1 block text-xs font-semibold text-slate-600">Default reminder time</span>
+          <input type="time" aria-label="Default reminder time" value={f.reminderTime} onChange={(e) => setF({ ...f, reminderTime: e.target.value })} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         </label>
       </Card>
       <Card title="Factory and office supervisors" description="They mark attendance at their location on the Attendance page (today and the last 7 days). Only employees with an active login can be chosen.">
@@ -224,8 +226,8 @@ function PayrollSettingsEditor({ initial }: { initial: PayrollSettings }) {
     <Card title="Payroll" description="Months before this are not in payroll (no Not logged warnings, nothing to close). Empty = the month of the first attendance record." className="max-w-xl">
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Payroll starts from</span>
-          <input type="month" aria-label="Payroll starts from" value={month} onChange={(e) => setMonth(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          <span className="mb-1 block text-xs font-semibold text-slate-600">Payroll starts from</span>
+          <input type="month" aria-label="Payroll starts from" value={month} onChange={(e) => setMonth(e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         </label>
         <Button variant="primary" disabled={month === initial.startMonth || save.isPending} onClick={() => save.mutate({ startMonth: month }, { onSuccess: () => (setIssues([]), toast("Payroll settings saved")), onError: (e) => setIssues(issuesOf(e)) })}>
           Save
@@ -263,7 +265,7 @@ export function SettingsScreen() {
             role="tab"
             aria-selected={tab === k}
             onClick={() => setTab(k)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
+            className={`rounded-lg px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
           >
             {l}
           </button>
@@ -276,13 +278,13 @@ export function SettingsScreen() {
       ) : tab === "attendance" ? (
         <AttendanceSettingsEditor key={data.updatedAt} initial={data.attendance} />
       ) : tab === "templates" ? (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {STAGES.map((s) => (
             <TemplateEditor key={s.key} stage={s.key} initial={data.templates[s.key]} units={data.lists.units.filter((u) => !u.archived)} />
           ))}
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {(Object.keys(LIST_LABELS) as ListKey[]).map((k) => (
             <ListEditor key={k} listKey={k} initial={data.lists[k]} />
           ))}

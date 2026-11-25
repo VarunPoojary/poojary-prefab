@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -48,11 +50,11 @@ export function ClientsList() {
         subtitle="Every client once, reused for all their enquiries."
         actions={
           <Button variant="primary" onClick={() => router.push("/clients/new")}>
-            + New client
+            <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> New client
           </Button>
         }
       />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="filter-bar mb-4 flex flex-wrap items-center gap-2">
         <input
           type="search"
           aria-label="Search clients"
@@ -71,7 +73,7 @@ export function ClientsList() {
             setActive(e.target.value as ClientListParams["active"]);
             setPage(1);
           }}
-          className="rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm"
+          className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm"
         >
           <option value="active">Active clients</option>
           <option value="inactive">Inactive clients</option>
@@ -93,8 +95,8 @@ export function ClientsList() {
           </EmptyState>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <table className="stack-table w-full min-w-[860px] text-sm">
+              <thead className="bg-slate-50 text-left text-xs text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Company</th>
                   <th className="px-4 py-3">Primary contact</th>
@@ -111,26 +113,26 @@ export function ClientsList() {
                   <tr
                     key={c.id}
                     data-testid="client-row"
-                    className="cursor-pointer hover:bg-red-50/40"
+                    className="cursor-pointer hover:bg-slate-50"
                     onClick={() => router.push(`/clients/${c.id}`)}
                   >
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{c.name}</div>
                       {!c.active ? (
-                        <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-600">
+                        <span className="mt-1 inline-flex rounded-md bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
                           Inactive
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{c.primaryContact?.name}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                    <td data-half data-label="Contact" className="px-4 py-3 text-slate-700">{c.primaryContact?.name}</td>
+                    <td data-half data-label="Phone" className="whitespace-nowrap px-4 py-3 text-slate-700">
                       {c.primaryContact?.phone ? formatPhone(c.primaryContact.phone) : "–"}
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{c.city || "–"}</td>
-                    <td className="px-4 py-3 text-slate-700">{labelOf(LEAD_SOURCES, c.leadSource)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{c.enquiryCount}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{relativeTime(c.lastActivity)}</td>
-                    <td className="px-2 py-3">
+                    <td data-half data-label="City" className="px-4 py-3 text-slate-700">{c.city || "–"}</td>
+                    <td data-mobile-hide className="px-4 py-3 text-slate-700">{labelOf(LEAD_SOURCES, c.leadSource)}</td>
+                    <td data-half data-label="Enquiries" className="px-4 py-3 text-right tabular-nums">{c.enquiryCount}</td>
+                    <td data-mobile-hide className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{relativeTime(c.lastActivity)}</td>
+                    <td data-menu className="px-2 py-3" onClick={(ev) => ev.stopPropagation()}>
                       <OptionsMenu label={`Options for ${c.name}`} items={menu(c)} />
                     </td>
                   </tr>

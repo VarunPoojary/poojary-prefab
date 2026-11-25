@@ -1,5 +1,7 @@
 "use client";
 
+import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -79,10 +81,10 @@ export function Wizard() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-slate-50">
-      <div className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-2.5">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="text-sm font-semibold text-slate-900">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-200 bg-white px-4 py-2.5 sm:px-5">
+        <div className="flex min-w-0 basis-full items-center gap-3 sm:basis-auto sm:flex-1">
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium text-slate-900">
               Quotation {q.meta.offerNo ? `#${q.meta.offerNo}` : "(new)"} {q.client.company ? `· ${q.client.company}` : ""}
             </div>
             <div className="text-xs text-slate-500">
@@ -90,13 +92,15 @@ export function Wizard() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <SaveIndicator onRetry={() => void saveNow()} />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <span className="min-w-0 flex-1 truncate sm:flex-none">
+            <SaveIndicator onRetry={() => void saveNow()} />
+          </span>
           <select
             aria-label="Quotation status"
             value={status}
             onChange={(e) => setStatus(e.target.value as typeof status)}
-            className={`rounded-md border px-2 py-1.5 text-xs font-semibold ${
+            className={`h-10 rounded-lg border pl-3 text-sm font-medium ${
               status === "final" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : "border-amber-300 bg-amber-50 text-amber-800"
             }`}
           >
@@ -107,9 +111,12 @@ export function Wizard() {
             Save
           </Button>
           {!isReview ? (
-            <Button variant="ghost" onClick={togglePreview}>
-              {showPreview ? "Hide preview" : "Show preview"}
-            </Button>
+            // The side preview only fits on extra-wide screens, so the toggle only shows there.
+            <span className="hidden xl:contents">
+              <Button variant="ghost" onClick={togglePreview}>
+                {showPreview ? "Hide preview" : "Show preview"}
+              </Button>
+            </span>
           ) : null}
           <Button variant="secondary" disabled={exiting} onClick={() => void exit()}>
             {exiting ? "Saving…" : "Exit"}
@@ -129,7 +136,7 @@ export function Wizard() {
                   <button
                     type="button"
                     onClick={() => goTo(i)}
-                    className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition ${
+                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       active ? "bg-red-50 font-semibold text-red-800" : "text-slate-700 hover:bg-slate-50"
                     }`}
                   >
@@ -144,11 +151,11 @@ export function Wizard() {
                               : "bg-slate-100 text-slate-500"
                       }`}
                     >
-                      {seen && !active && !errs && s.key !== "review" ? "✓" : i + 1}
+                      {seen && !active && !errs && s.key !== "review" ? <Icon icon={Check} size={14} /> : i + 1}
                     </span>
                     <span className="flex-1">{s.label}</span>
                     {seen && errs && s.key !== "review" ? (
-                      <span className="rounded bg-amber-100 px-1.5 text-[10px] font-semibold text-amber-800">{errs}</span>
+                      <span className="rounded bg-amber-100 px-1.5 text-[11px] font-semibold text-amber-800">{errs}</span>
                     ) : null}
                   </button>
                 </li>
@@ -161,7 +168,7 @@ export function Wizard() {
         </nav>
 
         <main className="flex min-w-0 flex-1 flex-col">
-          <div id="wizard-scroll" className="flex-1 overflow-y-auto p-5 lg:p-6">
+          <div id="wizard-scroll" className="flex-1 overflow-y-auto p-4 sm:p-5 lg:p-6">
             <div className={isReview ? "" : "mx-auto max-w-4xl"}>
               {status === "final" && recordId ? (
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
@@ -174,22 +181,24 @@ export function Wizard() {
                   </Button>
                 </div>
               ) : null}
-              <h2 className="mb-4 text-lg font-semibold text-slate-900">{STEPS[step].label}</h2>
+              <h2 className="mb-4 text-lg font-medium text-slate-900">{STEPS[step].label}</h2>
               <StepComponent />
             </div>
           </div>
-          <div className="flex items-center justify-between border-t border-slate-200 bg-white px-5 py-3">
+          <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
             <Button variant="secondary" disabled={step === 0} onClick={() => goTo(step - 1)}>
-              ← Back
+              <Icon icon={ChevronLeft} />
+              Back
             </Button>
-            <div className="flex gap-1 lg:hidden">
+            <div className="flex min-w-0 flex-1 justify-center gap-1 lg:hidden" aria-label={`Step ${step + 1} of ${STEPS.length}`}>
               {STEPS.map((s, i) => (
-                <span key={s.key} className={`h-1.5 w-5 rounded ${i <= step ? "bg-red-700" : "bg-slate-200"}`} />
+                <span key={s.key} className={`h-1.5 w-3 min-w-1 shrink rounded-full sm:w-5 ${i <= step ? "bg-red-700" : "bg-slate-200"}`} />
               ))}
             </div>
             {step < STEPS.length - 1 ? (
               <Button variant="primary" onClick={() => goTo(step + 1)}>
-                {step === STEPS.length - 2 ? "Review →" : "Next →"}
+                {step === STEPS.length - 2 ? "Review" : "Next"}
+                <Icon icon={ChevronRight} />
               </Button>
             ) : (
               <span />

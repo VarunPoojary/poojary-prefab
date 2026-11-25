@@ -20,6 +20,8 @@ import { DocumentsEditor } from "./Documents";
 import { DeactivateDialog, DeleteEmployeeDialog } from "./LifecycleDialogs";
 import { LoginCard } from "./LoginCard";
 import { EmployeeAttendance } from "@/components/attendance/EmployeeAttendance";
+import { Lock } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 const EVENT_LABELS: Record<EmployeeEvent["type"], string> = {
   created: "Employee added",
@@ -82,19 +84,19 @@ export function EmployeeFrame({ active, children }: { active: EmployeeTab["key"]
         }
       />
 
-      <nav className="mb-5 flex gap-1 border-b border-slate-200" aria-label="Employee sections">
+      <nav className="mb-5 grid grid-cols-3 border-b border-slate-200 sm:flex sm:gap-1" aria-label="Employee sections">
         {EMPLOYEE_TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             aria-current={t.key === active ? "page" : undefined}
             onClick={() => (t.locked ? toast(`${t.label} is coming soon.`) : router.push(tabHref(e.id, t.key)))}
-            className={`-mb-px flex items-center gap-1 border-b-2 px-3 py-2 text-sm font-medium ${
+            className={`-mb-px flex h-11 items-center justify-center gap-1 border-b-2 px-3 text-sm font-medium transition-colors ${
               t.key === active ? "border-red-700 text-red-800" : "border-transparent text-slate-500 hover:text-slate-800"
             } ${t.locked ? "cursor-not-allowed opacity-60" : ""}`}
           >
             {t.label}
-            {t.locked ? <span aria-label="coming soon">🔒</span> : null}
+            {t.locked ? <span aria-label="coming soon"><Icon icon={Lock} size={14} className="mr-1 inline-block align-[-2px]" /></span> : null}
           </button>
         ))}
       </nav>
@@ -293,7 +295,7 @@ function Details({ e }: { e: Employee }) {
   const search = useSearchParams();
   const today = todayIso();
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card title="Basic details">
         <dl>
           <InfoRow label="Employee ID">{e.code}</InfoRow>

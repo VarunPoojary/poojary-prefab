@@ -10,6 +10,8 @@ import { formatBytes, todayLocalIso } from "@/lib/format";
 import { FileLink } from "@/components/files/Files";
 import { uploadFile } from "@/lib/files";
 import { ErrorList } from "./ui";
+import { Paperclip } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 export type PendingFile = Pick<Attachment, "name" | "type" | "size" | "url" | "fileId">;
 
@@ -127,7 +129,7 @@ export function EnquiryForm({
   return (
     <div className="space-y-5">
       <Card title="Contact & dates">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Select
             label="Contact person"
             value={f.contactId}
@@ -148,7 +150,7 @@ export function EnquiryForm({
       </Card>
 
       <Card title="Project">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             label="Project / site name"
             required
@@ -187,7 +189,7 @@ export function EnquiryForm({
           )}
         </div>
         <div className="mt-4">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-600">Approx. size</div>
+          <div className="mb-1 text-xs font-semibold text-slate-600">Approx. size</div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <NumberField value={f.size.length} suffix="m" placeholder="Length" onChange={(v) => setSize({ length: v })} />
             <NumberField value={f.size.width} suffix="m" placeholder="Width" onChange={(v) => setSize({ width: v })} />
@@ -206,7 +208,7 @@ export function EnquiryForm({
       </Card>
 
       <Card title="Ownership">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Select
             label="Lead source for this enquiry"
             value={f.leadSource}
@@ -253,7 +255,7 @@ export function EnquiryForm({
               {existingFiles.map((a) => (
                 <li key={a.id} className="flex items-center justify-between">
                   <span className="flex min-w-0 items-center gap-1">
-                    📎 <FileLink file={a} /> <span className="shrink-0 text-xs text-slate-500">({formatBytes(a.size)})</span>
+                    <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={a} /> <span className="shrink-0 text-xs text-slate-500">({formatBytes(a.size)})</span>
                   </span>
                   {onRemoveExisting ? (
                     <Button size="sm" variant="danger" onClick={() => onRemoveExisting(a.id)}>
@@ -265,7 +267,7 @@ export function EnquiryForm({
               {pendingFiles.map((p, i) => (
                 <li key={`${p.name}-${i}`} className="flex items-center justify-between">
                   <span>
-                    📎 {p.name} <span className="text-xs text-slate-500">({formatBytes(p.size)})</span>
+                    <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" />{p.name} <span className="text-xs text-slate-500">({formatBytes(p.size)})</span>
                     {existingFiles.length || onRemoveExisting ? <span className="ml-1 text-xs text-emerald-700">new</span> : null}
                   </span>
                   <Button size="sm" variant="danger" onClick={() => onPendingFiles(pendingFiles.filter((_, j) => j !== i))}>

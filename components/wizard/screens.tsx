@@ -19,7 +19,7 @@ function FullPageMessage({ title, children }: { title: string; children?: React.
     <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-slate-50 p-6 text-center">
       <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
       {children}
-      <Link href="/quotations" className="rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
+      <Link href="/quotations" className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800">
         Back to quotations
       </Link>
     </div>

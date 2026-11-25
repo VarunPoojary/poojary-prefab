@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useState } from "react";
 import { EmptyState, LoadingRows, PageContainer, PageHeader } from "@/components/crm/ui";
@@ -49,7 +51,7 @@ export function MyTasks() {
                           <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                             {stageMeta(t.stageKey).label}
                             <BehindFlag behind={t.behind} />
-                            {soon ? <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-800">Due soon</span> : null}
+                            {soon ? <span className="rounded-lg bg-amber-100 px-2 py-0.5 font-semibold text-amber-800">Due soon</span> : null}
                             {t.task.plannedEnd ? <span>· due {formatDate(t.task.plannedEnd)}</span> : null}
                             {t.task.measure === "quantity" ? (
                               <span>
@@ -59,7 +61,7 @@ export function MyTasks() {
                           </span>
                         </Link>
                         <Button variant="primary" onClick={() => setUpdating(t)}>
-                          + Update
+                          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Update
                         </Button>
                       </div>
                       {pct !== null ? (

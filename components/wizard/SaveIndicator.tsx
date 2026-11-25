@@ -25,6 +25,6 @@ export function SaveIndicator({ onRetry }: { onRetry: () => void }) {
       </span>
     );
   if (dirty) return <span className="text-xs text-slate-500">Unsaved changes</span>;
-  if (recordId && lastSavedAt) return <span className="text-xs text-emerald-700">✓ Saved {time(lastSavedAt)}</span>;
+  if (recordId && lastSavedAt) return <span className="text-xs text-slate-500">Saved {time(lastSavedAt)}</span>;
   return <span className="text-xs text-slate-400">Not saved yet</span>;
 }

@@ -15,8 +15,10 @@ import type { Project, StageKey } from "@/lib/projects/types";
 import { issuesOf, rupee } from "./bits";
 import { ExpenseDialog } from "./ExpenseDialog";
 import { ExpenseRow } from "./ExpenseList";
+import { HardHat } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
-const sel = "rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm";
+const sel = "rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm";
 
 export function TotalsBar({ t }: { t: ExpenseTotals | undefined }) {
   const chip = (label: string, value: string, cls: string) => (
@@ -42,8 +44,8 @@ function BudgetCard({ projectId }: { projectId: string }) {
   return (
     <Card title="Budget vs actual" description="Accepted + paid expenses, including GST, against the budget of each work stage (Details → Money).">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm" data-testid="budget-vs-actual">
-          <thead className="text-left text-xs uppercase text-slate-500">
+        <table className="stack-table w-full text-sm stack-flush" data-testid="budget-vs-actual">
+          <thead className="text-left text-xs text-slate-500">
             <tr>
               <th className="py-1">Work stage</th>
               <th className="text-right">Budget</th>
@@ -56,10 +58,10 @@ function BudgetCard({ projectId }: { projectId: string }) {
             {data.lines.map((l) => (
               <tr key={l.group} className={l.over ? "text-red-700" : ""} data-over={l.over ? "true" : undefined}>
                 <td className="py-1.5 font-medium">{l.label}</td>
-                <td className="text-right tabular-nums">{l.budgetPaise ? rupee(l.budgetPaise) : <span className="text-slate-400">No budget</span>}</td>
-                <td className="text-right tabular-nums">{rupee(l.spentPaise)}</td>
-                <td className="text-right tabular-nums">{l.budgetPaise ? rupee(l.remainingPaise) : "–"}</td>
-                <td className="text-right">
+                <td data-half data-label="Budget" className="text-right tabular-nums">{l.budgetPaise ? rupee(l.budgetPaise) : <span className="text-slate-400">No budget</span>}</td>
+                <td data-half data-label="Spent" className="text-right tabular-nums">{rupee(l.spentPaise)}</td>
+                <td data-half data-label="Remaining" className="text-right tabular-nums">{l.budgetPaise ? rupee(l.remainingPaise) : "–"}</td>
+                <td data-half data-label="Used" className="text-right">
                   {l.pctUsed !== null ? (
                     <span className="inline-flex items-center gap-2">
                       <span className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-200">
@@ -75,10 +77,10 @@ function BudgetCard({ projectId }: { projectId: string }) {
             ))}
             <tr className="font-semibold">
               <td className="py-1.5">Total</td>
-              <td className="text-right tabular-nums">{rupee(data.totalBudgetPaise)}</td>
-              <td className="text-right tabular-nums">{rupee(data.totalSpentPaise)}</td>
-              <td className="text-right tabular-nums">{rupee(data.totalBudgetPaise - data.totalSpentPaise)}</td>
-              <td className="text-right tabular-nums">{data.totalBudgetPaise ? `${Math.round((data.totalSpentPaise / data.totalBudgetPaise) * 100)}%` : "–"}</td>
+              <td data-half data-label="Budget" className="text-right tabular-nums">{rupee(data.totalBudgetPaise)}</td>
+              <td data-half data-label="Spent" className="text-right tabular-nums">{rupee(data.totalSpentPaise)}</td>
+              <td data-half data-label="Remaining" className="text-right tabular-nums">{rupee(data.totalBudgetPaise - data.totalSpentPaise)}</td>
+              <td data-half data-label="Used" className="text-right tabular-nums">{data.totalBudgetPaise ? `${Math.round((data.totalSpentPaise / data.totalBudgetPaise) * 100)}%` : "–"}</td>
             </tr>
           </tbody>
         </table>
@@ -140,9 +142,9 @@ export function ProjectExpenses({ p }: { p: Project }) {
 
       {uncovered.length && access.canRequest ? (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900" data-testid="casual-check">
-          <b>👷 Casual labour not requested yet:</b>
+          <b><Icon icon={HardHat} size={14} className="mr-1 inline-block align-[-2px]" />Casual labour not requested yet:</b>
           {uncovered.slice(0, 8).map((d) => (
-            <button key={d.date} type="button" onClick={() => void openCasual(d.date)} className="rounded-full bg-white px-2.5 py-0.5 font-medium ring-1 ring-amber-300 hover:bg-amber-100">
+            <button key={d.date} type="button" onClick={() => void openCasual(d.date)} className="rounded-lg bg-white px-2.5 py-0.5 font-medium ring-1 ring-amber-300 hover:bg-amber-100">
               {dayLabel(d.date)} · {d.workers} workers · {rupee(d.amountPaise)}
             </button>
           ))}
@@ -150,7 +152,7 @@ export function ProjectExpenses({ p }: { p: Project }) {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="filter-bar flex flex-wrap items-center gap-2">
         <input type="search" aria-label="Search expenses" placeholder="Search description, paid to, bill no., requested by…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-[220px] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" />
         <select aria-label="Filter by work stage" value={category} onChange={(e) => setCategory(e.target.value)} className={sel}>
           <option value="">All work stages</option>
@@ -194,7 +196,7 @@ export function ProjectExpenses({ p }: { p: Project }) {
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="hidden grid-cols-[6.5rem_1fr_11rem_8rem_6rem] gap-3 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
+        <div className="hidden grid-cols-[6.5rem_1fr_11rem_8rem_6rem] gap-3 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 md:grid">
           <span>Date</span>
           <span>Description</span>
           <span>Work stage</span>

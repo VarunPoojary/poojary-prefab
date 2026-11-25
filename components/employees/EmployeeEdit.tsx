@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { EmptyState, ErrorList, PageContainer, PageHeader, useDebounced } from "@/components/crm/ui";
@@ -91,7 +93,7 @@ function LookupSelect({
           options={[{ value: "", label: "Choose…" }, ...(value && !options.includes(value) ? [value] : []).concat(options).map((o) => ({ value: o, label: o }))]}
         />
         <Button size="sm" onClick={() => setAdding(true)}>
-          + Add new
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add new
         </Button>
       </div>
       <Err msg={error} />
@@ -242,7 +244,7 @@ function EmployeeForm({ employee }: { employee?: Employee }) {
       <div className="space-y-4">
         {tab === "basic" ? (
           <Card title="Basic details">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <TextField label="Full name" required value={f.fullName} onChange={(v) => set({ fullName: v })} />
                 <Err msg={errors.fullName} />
@@ -279,7 +281,7 @@ function EmployeeForm({ employee }: { employee?: Employee }) {
 
         {tab === "job" ? (
           <Card title="Job details">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <LookupSelect kind="designations" label="Designation" value={f.designation} onChange={(v) => set({ designation: v })} error={errors.designation} />
               <LookupSelect kind="departments" label="Department" value={f.department} onChange={(v) => set({ department: v })} error={errors.department} />
               <div>
@@ -302,7 +304,7 @@ function EmployeeForm({ employee }: { employee?: Employee }) {
         {tab === "salary" ? (
           isNew ? (
             <Card title="Salary" description="Only admins can see salary. Later changes are kept as a history with effective dates.">
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
                   <Select
                     label="Pay type *"
@@ -349,7 +351,7 @@ function EmployeeForm({ employee }: { employee?: Employee }) {
 
         {tab === "emergency" ? (
           <Card title="Emergency contact" description="Important for site and factory workers.">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <TextField label="Name" value={f.emergencyContact.name} onChange={(v) => setEc({ name: v })} />
               <TextField label="Relation" value={f.emergencyContact.relation} onChange={(v) => setEc({ relation: v })} placeholder="e.g. Wife, Father" />
               <div>
