@@ -1,7 +1,7 @@
 /* Factory dashboard: all pending factory work across projects, ranked by what needs attention first. */
 import { addDays, daysBetween, daysLate, stageBehind, stagePct, taskBehind, taskPct, taskStatus } from "@/lib/projects/rules";
 import type { Delay, ProgressUpdate, Project, Stage, Task } from "@/lib/projects/types";
-import { delayBreakdown, lastWorkDate, lookahead, round1, stagePlannedPct, weekStart } from "./common";
+import { currentDocSlots, delayBreakdown, lastWorkDate, lookahead, round1, stagePlannedPct, weekStart } from "./common";
 import type { FactoryBoard, FactoryHealth, FactoryProjectRow, FactoryTaskRow, ProcessKey, ProcessLoad, WeeklyOutput } from "./types";
 
 export const PROCESS_LABELS: Record<ProcessKey, string> = {
@@ -132,6 +132,7 @@ function row(p: Project, factory: Stage, input: FactoryInput): FactoryProjectRow
     lastUpdate: lastWorkDate(updates),
     latestDelay: delays[0] ? { reason: delays[0].reason, recordedAt: delays[0].recordedAt } : null,
     tasks,
+    docSlots: currentDocSlots(p),
   };
 }
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ErrorList, InfoRow, useUserName } from "@/components/crm/ui";
-import { FileLink } from "@/components/files/Files";
 import { useToast } from "@/components/Providers";
 import { Button, Card, NumberField, Select, TextArea, TextField } from "@/components/ui/fields";
 import { Modal } from "@/components/ui/overlays";
@@ -11,13 +10,12 @@ import { useAuth } from "@/lib/auth/AuthProvider";
 import { BUILDING_TYPES, CONTACT_ROLES, SCOPES, labelOf } from "@/lib/crm/config";
 import { useClient, useEnquiry, useUsers } from "@/lib/crm/hooks";
 import { formatPhone } from "@/lib/crm/rules";
-import { fileStore, uploadFile } from "@/lib/files";
-import { formatBytes, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { projectRepo } from "@/lib/projects";
-import { BUDGET_GROUPS, PAYMENT_MODES, PROJECT_DOC_SLOTS, type BudgetGroup } from "@/lib/projects/config";
+import { BUDGET_GROUPS, PAYMENT_MODES, type BudgetGroup } from "@/lib/projects/config";
 import { useProjectMutation } from "@/lib/projects/hooks";
 import { moneyTotals, todayIso } from "@/lib/projects/rules";
-import type { ExternalParty, Milestone, Payment, Project, ProjectContact, ProjectDocSlot, ProjectInfoInput, TeamMember, Variation } from "@/lib/projects/types";
+import type { ExternalParty, Milestone, Payment, Project, ProjectContact, ProjectInfoInput, TeamMember, Variation } from "@/lib/projects/types";
 import { useList } from "@/lib/settings/hooks";
 import { RowsDialog } from "./RowsDialog";
 import { fmtManDays } from "@/components/attendance/bits";
@@ -26,7 +24,8 @@ import { useExpenseBudget } from "@/lib/expenses/hooks";
 import { formatPaise } from "@/lib/paise";
 import { useEmployeeLabourCost } from "@/lib/payroll/hooks";
 import { Timeline } from "./Timeline";
-import { FileText, MapPin, Plus, TriangleAlert, Upload, X } from "lucide-react";
+import { ProjectDocuments } from "./Documents";
+import { MapPin, Plus, TriangleAlert, X } from "lucide-react";
 import { Icon } from "@/components/ui/icons";
 
 const rupee = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -904,92 +903,6 @@ function PaymentDialog({ p, onClose }: { p: Project; onClose: () => void }) {
 
 /* ---------- E. Documents ---------- */
 
-function DocumentsSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
-  const toast = useToast();
-  const userName = useUserName();
-  const [slot, setSlot] = useState<ProjectDocSlot>("po");
-  const [busy, setBusy] = useState(false);
-  const add = useProjectMutation((doc: Parameters<typeof projectRepo.addDocument>[1]) => projectRepo.addDocument(p.id, doc));
-  const remove = useProjectMutation((docId: string) => projectRepo.removeDocument(p.id, docId));
-  return (
-    <Card
-      title="E. Documents"
-      description="PO / LOI, approved drawings, anchor bolt plan, contracts, handover certificate."
-      actions={
-        isAdmin ? (
-          <div className="flex flex-wrap items-end gap-2">
-            <select aria-label="Document type" value={slot} onChange={(e) => setSlot(e.target.value as ProjectDocSlot)} className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
-              {PROJECT_DOC_SLOTS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-            <label className={`cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50 ${busy ? "opacity-60" : ""}`}>
-              <Icon icon={Upload} size={16} />
-            {busy ? "Uploading…" : "Upload"}
-              <input
-                type="file"
-                multiple
-                className="hidden"
-                aria-label="Upload project documents"
-                disabled={busy}
-                onChange={async (e) => {
-                  const files = Array.from(e.target.files ?? []);
-                  e.target.value = "";
-                  setBusy(true);
-                  for (const f of files) {
-                    try {
-                      const m = await uploadFile(f);
-                      await add.mutateAsync({ slot, fileId: m.id, name: m.name, type: m.type, size: m.size });
-                    } catch (err) {
-                      toast(err instanceof Error ? err.message : String(err), "error");
-                    }
-                  }
-                  setBusy(false);
-                }}
-              />
-            </label>
-          </div>
-        ) : null
-      }
-    >
-      <div id="documents">
-        {p.documents.length ? (
-          <ul className="divide-y divide-slate-100 text-sm">
-            {p.documents.map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1 font-medium">
-                    <Icon icon={FileText} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={d} />
-                  </span>
-                  <span className="block text-xs text-slate-500">
-                    {labelOf(PROJECT_DOC_SLOTS, d.slot)} · {formatBytes(d.size)} · {formatDate(d.uploadedAt)} by {userName(d.uploadedBy)}
-                  </span>
-                </span>
-                {isAdmin ? (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => {
-                      if (!window.confirm(`Remove ${d.name}?`)) return;
-                      remove.mutate(d.id, { onSuccess: () => void fileStore.remove(d.fileId).catch(() => undefined) });
-                    }}
-                  >
-                    Remove
-                  </Button>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-xs text-slate-500">No documents uploaded.</p>
-        )}
-      </div>
-    </Card>
-  );
-}
-
 /** Details tab: sections A–E and the timeline (F). */
 export function ProjectDetails({ p }: { p: Project }) {
   const { user } = useAuth();
@@ -1000,7 +913,7 @@ export function ProjectDetails({ p }: { p: Project }) {
         <InfoSection p={p} isAdmin={isAdmin} />
         <ClientSection p={p} isAdmin={isAdmin} />
         <PeopleSection p={p} isAdmin={isAdmin} />
-        <DocumentsSection p={p} isAdmin={isAdmin} />
+        <ProjectDocuments p={p} isAdmin={isAdmin} />
       </div>
       <div className="space-y-4">
         {isAdmin && p.money ? <MoneySection p={p} /> : null}

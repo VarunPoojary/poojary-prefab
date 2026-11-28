@@ -15,7 +15,6 @@ import {
   type ProgressUpdate,
   type Project,
   type ProjectContact,
-  type ProjectDocument,
   type ProjectEvent,
   type ProjectInfoInput,
   type ProjectListParams,
@@ -24,6 +23,7 @@ import {
   type StageKey,
   type TeamMember,
   type Variation,
+  type NewProjectDocument,
   type DashboardData,
   type DashboardPage,
 } from "./types";
@@ -116,8 +116,8 @@ export class ApiProjectRepository implements ProjectRepository {
   saveParties(id: string, parties: ExternalParty[]) {
     return this.send<Project>("PUT", `/projects/${id}/parties`, parties);
   }
-  addDocument(id: string, doc: Omit<ProjectDocument, "id" | "uploadedAt" | "uploadedBy">) {
-    return this.send<Project>("POST", `/projects/${id}/documents`, doc);
+  addDocument(id: string, doc: NewProjectDocument, opts: { replaces?: string } = {}) {
+    return this.send<Project>("POST", `/projects/${id}/documents`, { ...doc, replaces: opts.replaces });
   }
   removeDocument(id: string, docId: string) {
     return this.send<Project>("DELETE", `/projects/${id}/documents/${docId}`);

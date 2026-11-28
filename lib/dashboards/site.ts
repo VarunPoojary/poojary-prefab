@@ -17,7 +17,7 @@ import {
   taskPct,
 } from "@/lib/projects/rules";
 import type { Delay, ProgressUpdate, Project, StageKey } from "@/lib/projects/types";
-import { delayBreakdown, lastWorkDate, lookahead, projectPctAt, projectPlannedPct, round1, stagePlannedPct } from "./common";
+import { currentDocSlots, delayBreakdown, lastWorkDate, lookahead, projectPctAt, projectPlannedPct, round1, stagePlannedPct } from "./common";
 import type { DailyCheckDay, DayState, ProblemTask, SiteBoard, SiteProjectRow } from "./types";
 
 /** Stages that happen at the site (the lookahead and delay breakdown use these). */
@@ -149,6 +149,7 @@ function row(p: Project, input: SiteInput): SiteProjectRow {
     lastUpdate: lastWorkDate(updates),
     attendanceOn: attendanceOf(p).enabled,
     days,
+    docSlots: currentDocSlots(p),
   };
 }
 

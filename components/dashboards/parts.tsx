@@ -196,6 +196,19 @@ export function DelayList({ items, emptyText }: { items: DelayBreakdown[]; empty
   );
 }
 
+/** "Missing documents: PO / LOI, Anchor bolt plan" for required document types the project lacks. */
+export function MissingDocs({ projectId, docSlots }: { projectId: string; docSlots: string[] }) {
+  const types = useList("documentTypes");
+  const missing = types.items.filter((t) => t.required && !docSlots.includes(t.value));
+  if (!missing.length) return null;
+  return (
+    <Link href={`/projects/${projectId}/details#documents`} className="mt-2 flex items-start gap-1.5 text-xs text-red-700 hover:underline">
+      <span className="font-medium">Missing documents:</span>
+      <span>{missing.map((t) => t.label).join(", ")}</span>
+    </Link>
+  );
+}
+
 /** "today", "yesterday", "5 days ago" for a work date. */
 export function sinceLabel(date: string | null, today: string) {
   if (!date) return "never";

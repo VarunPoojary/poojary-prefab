@@ -1,5 +1,6 @@
 import type {
   DashboardData,
+  NewProjectDocument,
   DashboardPage,
   Delay,
   EventListParams,
@@ -13,7 +14,6 @@ import type {
   Payment,
   Project,
   ProjectContact,
-  ProjectDocument,
   ProjectEvent,
   ProjectInfoInput,
   ProjectListParams,
@@ -60,7 +60,8 @@ export interface ProjectRepository {
   saveTeam(id: string, team: TeamMember[]): Promise<Project>;
   saveContacts(id: string, contacts: ProjectContact[]): Promise<Project>;
   saveParties(id: string, parties: ExternalParty[]): Promise<Project>;
-  addDocument(id: string, doc: Omit<ProjectDocument, "id" | "uploadedAt" | "uploadedBy">): Promise<Project>;
+  /** Admin, or the PM / site engineers on the team (active or on-hold projects). `replaces`: older version of the same type. */
+  addDocument(id: string, doc: NewProjectDocument, opts?: { replaces?: string }): Promise<Project>;
   removeDocument(id: string, docId: string): Promise<Project>;
   /** Fills empty totals of tasks measured in MT with the steel weight. Returns how many were filled. */
   fillSteelTotals(id: string): Promise<number>;

@@ -1,5 +1,5 @@
 import { DEFAULT_TRADES } from "@/lib/attendance/config";
-import type { EventType, ListItem, PaymentMode, ProjectDocSlot, ProjectStatus, StageKey, TemplateTask } from "./types";
+import type { EventType, ListItem, PaymentMode, ProjectStatus, StageKey, TemplateTask } from "./types";
 
 export interface StageMeta {
   key: StageKey;
@@ -117,11 +117,32 @@ export const DEFAULT_LISTS = {
   ),
   trades: items(...DEFAULT_TRADES),
   units: items(["MT", "MT"], ["Nos", "Nos"], ["sq ft", "sq ft"], ["Rmt", "Rmt"], ["trucks", "trucks"], ["drawings", "drawings"], ["m²", "m²"]),
+  /** Project document types, in the order their groups show on a project. Values of the old fixed list are kept. */
+  documentTypes: [
+    { value: "po", label: "PO / LOI", required: true },
+    { value: "quotation", label: "Quotation" },
+    { value: "drawings", label: "Approved drawings", required: true },
+    { value: "shop_drawings", label: "Shop drawings" },
+    { value: "anchor_plan", label: "Anchor bolt plan", required: true },
+    { value: "client_docs", label: "Client documents" },
+    { value: "contract", label: "Contract" },
+    { value: "handover", label: "Handover certificate" },
+    { value: "other", label: "Other" },
+  ] as ListItem[],
 };
+
+/** Document type values the app itself uses (linked quotation, enquiry attachments). Keep them in the list. */
+export const QUOTATION_DOC_TYPE = "quotation";
+export const CLIENT_DOC_TYPE = "client_docs";
+
+/** Files allowed as project documents: PDF, photos and CAD drawings, 10 MB each. */
+export const PROJECT_DOC_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.dwg,.dxf";
+export const PROJECT_DOC_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "webp", "heic", "heif", "dwg", "dxf"];
 
 export type ListKey = keyof typeof DEFAULT_LISTS;
 
 export const LIST_LABELS: Record<ListKey, { title: string; hint: string }> = {
+  documentTypes: { title: "Document types", hint: "Groups of project documents, in this order. Tick Required for documents every project must have." },
   delayReasons: { title: "Delay reasons", hint: "Asked when a task or stage slips past its planned date." },
   projectRoles: { title: "Project roles", hint: "Roles of internal team members on a project." },
   partyTypes: { title: "External party types", hint: "Consultants, contractors and suppliers on a project." },
@@ -167,15 +188,6 @@ export const PAYMENT_MODES: { value: PaymentMode; label: string }[] = [
   { value: "cheque", label: "Cheque" },
   { value: "upi", label: "UPI" },
   { value: "cash", label: "Cash" },
-  { value: "other", label: "Other" },
-];
-
-export const PROJECT_DOC_SLOTS: { value: ProjectDocSlot; label: string }[] = [
-  { value: "po", label: "PO / LOI" },
-  { value: "drawings", label: "Approved drawings" },
-  { value: "anchor_plan", label: "Anchor bolt plan" },
-  { value: "contract", label: "Contract" },
-  { value: "handover", label: "Handover certificate" },
   { value: "other", label: "Other" },
 ];
 

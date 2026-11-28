@@ -3,7 +3,7 @@ import { ADMIN_ROLE, normaliseRoles, PAGE_KEYS, roleIdFor, type RoleDef } from "
 import type { Role } from "@/lib/auth/types";
 import { ProjectForbiddenError, type ListItem, type StageKey, type TemplateTask } from "@/lib/projects/types";
 import { SettingsStore } from "./store";
-import type { ListKey } from "@/lib/projects/config";
+import { CLIENT_DOC_TYPE, DEFAULT_LISTS, QUOTATION_DOC_TYPE, type ListKey } from "@/lib/projects/config";
 import type { AppSettings, AttendanceSettings, PayrollSettings, SettingsRepository } from "./types";
 
 const slug = (s: string) =>
@@ -27,7 +27,7 @@ export function normaliseList(items: ListItem[]): ListItem[] {
     let value = i.value || slug(label);
     while (seen.has(value)) value = `${value}_2`;
     seen.add(value);
-    return { value, label, ...(i.archived ? { archived: true } : {}) };
+    return { value, label, ...(i.archived ? { archived: true } : {}), ...(i.required ? { required: true } : {}) };
   });
 }
 
@@ -69,7 +69,15 @@ export class LocalSettingsRepository implements SettingsRepository {
 
   async saveList(key: ListKey, items: ListItem[]): Promise<AppSettings> {
     await this.admin();
-    const clean = normaliseList(items);
+    let clean = normaliseList(items);
+    if (key === "documentTypes") {
+      // The linked quotation and enquiry files are filed under these; they can be renamed, never archived or dropped.
+      for (const fixed of [QUOTATION_DOC_TYPE, CLIENT_DOC_TYPE]) {
+        const found = clean.find((i) => i.value === fixed);
+        if (found) delete found.archived;
+        else clean = [...clean, DEFAULT_LISTS.documentTypes.find((i) => i.value === fixed)!];
+      }
+    }
     if (!clean.some((i) => !i.archived)) throw new ValidationError(["Keep at least one active entry."]);
     const s = this.store.read();
     const next = { ...s, lists: { ...s.lists, [key]: clean }, updatedAt: new Date().toISOString() };

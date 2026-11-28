@@ -6,7 +6,8 @@ export type StageKey = "design" | "factory" | "transport" | "erection" | "qualit
 export type ProjectStatus = "active" | "on_hold" | "completed" | "cancelled";
 export type Measure = "quantity" | "percent";
 export type PaymentMode = "neft" | "cheque" | "upi" | "cash" | "other";
-export type ProjectDocSlot = "po" | "drawings" | "anchor_plan" | "contract" | "handover" | "other";
+/** A value of the admin-maintained "documentTypes" list (Settings → Lists). */
+export type ProjectDocSlot = string;
 export type EventType = "note" | "progress" | "task" | "stage" | "detail" | "payment" | "expense" | "attendance";
 
 /** One entry of an admin-maintained list (delay reasons, roles, units…). Archived values stay valid on old records. */
@@ -14,6 +15,8 @@ export interface ListItem {
   value: string;
   label: string;
   archived?: boolean;
+  /** Document types only: every project should have one. */
+  required?: boolean;
 }
 
 export interface TemplateTask {
@@ -100,6 +103,16 @@ export interface ProjectMoney {
 export interface ProjectDocument {
   id: string;
   slot: ProjectDocSlot;
+  /** "quotation": a live link to the linked quotation (no stored file; the PDF is made when downloaded). */
+  kind?: "file" | "quotation";
+  quotationId?: string;
+  /** Where it came from: uploaded here, the linked quotation, or the enquiry's attachments. */
+  source?: "upload" | "quotation" | "enquiry";
+  /** Free text such as "R2". */
+  revision?: string;
+  /** Id of the newer document that replaced this one (kept, shown as an older version). */
+  supersededBy?: string | null;
+  /** Empty for quotation links. */
   fileId: string;
   name: string;
   type: string;
@@ -107,6 +120,9 @@ export interface ProjectDocument {
   uploadedAt: string;
   uploadedBy: string;
 }
+
+/** What an upload sends; the repository adds id, who and when. */
+export type NewProjectDocument = Pick<ProjectDocument, "slot" | "fileId" | "name" | "type" | "size"> & { revision?: string };
 
 export interface ProjectAttendanceSettings {
   enabled: boolean;
@@ -192,6 +208,8 @@ export interface Project {
   attendance?: ProjectAttendanceSettings;
   /** Pinned to the top of the Factory dashboard queue, with the reason (e.g. client escalation). */
   factoryPin?: StatusReason | null;
+  /** The linked quotation was added to Documents once (it isn't re-added if someone removes it). */
+  quotationDocAdded?: boolean;
   createdAt: string;
   createdBy: string;
   updatedAt: string;

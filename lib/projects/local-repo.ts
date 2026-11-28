@@ -9,8 +9,8 @@ import type { NewNotification } from "@/lib/notifications/types";
 import type { NotificationStore } from "@/lib/notifications/store";
 import type { SettingsStore } from "@/lib/settings/store";
 import { appStorage, type KeyValueStorage } from "@/lib/storage";
-import { BUDGET_GROUPS, MONEY_EVENT_TYPES, PAYMENT_MODES, PROJECT_DOC_SLOTS, PROJECT_STATUSES, STAGES, stageMeta, type BudgetGroup } from "./config";
-import { blankProject, newId, projectFromEnquiry, type BuildContext } from "./build";
+import { BUDGET_GROUPS, MONEY_EVENT_TYPES, PAYMENT_MODES, PROJECT_DOC_EXTENSIONS, PROJECT_STATUSES, STAGES, stageMeta, type BudgetGroup } from "./config";
+import { blankProject, newId, projectFromEnquiry, quotationDocument, type BuildContext } from "./build";
 import type { AvailableEnquiry, ProjectRepository } from "./repository";
 import {
   checkUpdate,
@@ -33,6 +33,7 @@ import {
 import { seedProjects } from "./seed";
 import {
   ProjectForbiddenError,
+  type NewProjectDocument,
   type DashboardData,
   type DashboardPage,
   type Delay,
@@ -75,6 +76,9 @@ const fmtDate = (iso: string) => {
 };
 const rupees = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const statusLabel = (s: ProjectStatus) => PROJECT_STATUSES.find((x) => x.value === s)!.label;
+
+/** Same limit as the file store (lib/files MAX_FILE_BYTES) and the Supabase bucket. */
+const MAX_DOC_BYTES = 10 * 1024 * 1024;
 
 export interface Actor {
   id: string;
@@ -165,6 +169,18 @@ export class LocalProjectRepository implements ProjectRepository {
     const groups = new Set<string>(BUDGET_GROUPS.map((g) => g.value));
     if (list.some((p) => p.money && Object.keys(p.money.budget).some((k) => !groups.has(k)))) {
       for (const p of list) if (p.money) p.money.budget = normaliseBudget(p.money.budget);
+      this.saveProjects(list);
+    }
+    // Projects created before quotations were filed under Documents get their linked quotation, once.
+    if (list.some((p) => p.quotationId && !p.quotationDocAdded)) {
+      const quotes = new Map(this.o.sources.quotations().map((q) => [q.id, q]));
+      for (const p of list) {
+        if (!p.quotationId || p.quotationDocAdded) continue;
+        const q = quotes.get(p.quotationId);
+        if (q && !p.documents.some((d) => d.kind === "quotation" && d.quotationId === q.id))
+          p.documents = [quotationDocument(q, { createdBy: "system", at: p.createdAt || this.iso() }), ...p.documents];
+        p.quotationDocAdded = true;
+      }
       this.saveProjects(list);
     }
     return list;
@@ -669,19 +685,65 @@ export class LocalProjectRepository implements ProjectRepository {
     });
   }
 
-  async addDocument(id: string, doc: Omit<ProjectDocument, "id" | "uploadedAt" | "uploadedBy">): Promise<Project> {
-    return this.change(id, { admin: true, allowClosed: true }, (p, a) => ({
-      project: { ...p, documents: [...p.documents, { ...doc, id: newId("pdoc"), uploadedAt: this.iso(), uploadedBy: a.id }] },
-      events: [{ type: "detail", text: `Document uploaded: ${labelOf(PROJECT_DOC_SLOTS, doc.slot)} – ${doc.name}`, source: { kind: "section", id: "documents" } }],
-    }));
+  /**
+   * Uploads a file document. Admin always; the project manager and site engineers on the team while the project is
+   * active or on hold. `replaces` marks an older document of the same type as superseded (kept as an older version).
+   */
+  async addDocument(id: string, doc: NewProjectDocument, opts: { replaces?: string } = {}): Promise<Project> {
+    return this.change(id, { allowClosed: true }, (p, a) => {
+      if (a.role !== "admin") {
+        if (!isSiteManager(p, a.id, this.today()))
+          throw new ProjectForbiddenError("Only Admin, the project manager and site engineers on the team can upload documents.");
+        if (p.status === "completed" || p.status === "cancelled")
+          throw new ValidationError([`This project is ${statusLabel(p.status).toLowerCase()}; only Admin can add documents now.`]);
+      }
+      const type = this.o.settings.read().lists.documentTypes.find((t) => t.value === doc.slot);
+      if (!type || type.archived) throw new ValidationError(["Choose a document type from the list (Settings → Lists → Document types)."]);
+      const ext = doc.name.split(".").pop()?.toLowerCase() ?? "";
+      if (!PROJECT_DOC_EXTENSIONS.includes(ext)) throw new ValidationError([`“${doc.name}”: only PDF, photos (JPG, PNG, WebP, HEIC) and CAD drawings (DWG, DXF) can be added.`]);
+      if (doc.size > MAX_DOC_BYTES) throw new ValidationError([`“${doc.name}” is larger than 10 MB.`]);
+      const revision = doc.revision?.trim() || undefined;
+      const newDoc: ProjectDocument = {
+        id: newId("pdoc"),
+        slot: doc.slot,
+        kind: "file",
+        source: "upload",
+        fileId: doc.fileId,
+        name: doc.name,
+        type: doc.type,
+        size: doc.size,
+        ...(revision ? { revision } : {}),
+        supersededBy: null,
+        uploadedAt: this.iso(),
+        uploadedBy: a.id,
+      };
+      const replaced = opts.replaces ? p.documents.find((d) => d.id === opts.replaces) : undefined;
+      if (opts.replaces && (!replaced || replaced.slot !== doc.slot || replaced.supersededBy))
+        throw new ValidationError(["The document to replace must be a current document of the same type."]);
+      const label = this.o.settings.label("documentTypes", doc.slot);
+      return {
+        project: { ...p, documents: [...p.documents.map((d) => (d.id === replaced?.id ? { ...d, supersededBy: newDoc.id } : d)), newDoc] },
+        events: [
+          {
+            type: "detail",
+            text: `Document uploaded: ${label} – ${doc.name}${revision ? ` (${revision})` : ""}${replaced ? `, replaces ${replaced.name}` : ""}`,
+            source: { kind: "section", id: "documents" },
+          },
+        ],
+      };
+    });
   }
 
+  /** Admin only. Documents the removed one had replaced become current again. */
   async removeDocument(id: string, docId: string): Promise<Project> {
     return this.change(id, { admin: true, allowClosed: true }, (p) => {
       const d = p.documents.find((x) => x.id === docId);
       if (!d) return { project: p };
       return {
-        project: { ...p, documents: p.documents.filter((x) => x.id !== docId) },
+        project: {
+          ...p,
+          documents: p.documents.filter((x) => x.id !== docId).map((x) => (x.supersededBy === docId ? { ...x, supersededBy: d.supersededBy ?? null } : x)),
+        },
         events: [{ type: "detail", text: `Document removed: ${d.name}`, source: { kind: "section", id: "documents" } }],
       };
     });

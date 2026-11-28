@@ -14,7 +14,7 @@ import type { DailyCheckDay, SiteProjectRow } from "@/lib/dashboards/types";
 import { formatDate } from "@/lib/format";
 import { stageMeta } from "@/lib/projects/config";
 import { useList } from "@/lib/settings/hooks";
-import { DayDots, DayLegend, DelayList, LookaheadList, PlanBar, PlanLegend, StatTile, sinceLabel } from "./parts";
+import { DayDots, DayLegend, DelayList, LookaheadList, MissingDocs, PlanBar, PlanLegend, StatTile, sinceLabel } from "./parts";
 
 const fmt1 = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 const timeOf = (iso: string) => (iso ? new Date(iso).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }) : "");
@@ -170,6 +170,8 @@ function SiteCard({ r, today }: { r: SiteProjectRow; today: string }) {
           {sinceLabel(r.lastUpdate, today)}
         </Fact>
       </div>
+
+      <MissingDocs projectId={r.projectId} docSlots={r.docSlots} />
 
       {r.lowCrew ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">Behind schedule with fewer people than its 7-day average ({workers} today vs {fmt1(r.avgWorkers7)}).</p>

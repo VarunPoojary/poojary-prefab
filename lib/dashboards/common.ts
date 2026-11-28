@@ -42,6 +42,9 @@ export function projectPctAt(p: Pick<Project, "stages">, updates: ProgressUpdate
   return projectPct(p.stages.map((s) => ({ ...s, tasks: s.tasks.map((t) => ({ ...t, completed: done.get(t.id) ?? 0 })) })));
 }
 
+/** Document types with at least one current (not superseded) document. */
+export const currentDocSlots = (p: Pick<Project, "documents">) => [...new Set((p.documents ?? []).filter((d) => !d.supersededBy).map((d) => d.slot))];
+
 /** Most recent work date among updates (optionally of one stage). */
 export function lastWorkDate(updates: ProgressUpdate[], stageKey?: StageKey): string | null {
   let last: string | null = null;

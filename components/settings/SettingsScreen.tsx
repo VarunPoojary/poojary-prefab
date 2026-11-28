@@ -6,7 +6,7 @@ import { ErrorList, PageContainer, PageHeader } from "@/components/crm/ui";
 import { useToast } from "@/components/Providers";
 import { Button, Card } from "@/components/ui/fields";
 import { Icon, STAGE_ICONS } from "@/components/ui/icons";
-import { LIST_LABELS, STAGES, type ListKey } from "@/lib/projects/config";
+import { CLIENT_DOC_TYPE, LIST_LABELS, QUOTATION_DOC_TYPE, STAGES, type ListKey } from "@/lib/projects/config";
 import type { ListItem, Measure, StageKey, TemplateTask } from "@/lib/projects/types";
 import { useUsers } from "@/lib/crm/hooks";
 import { useSaveAttendanceSettings, useSaveList, useSavePayrollSettings, useSaveTemplates, useSettings } from "@/lib/settings/hooks";
@@ -106,22 +106,45 @@ function ListEditor({ listKey, initial }: { listKey: ListKey; initial: ListItem[
   const [issues, setIssues] = useState<string[]>([]);
   const dirty = JSON.stringify(rows) !== JSON.stringify(initial);
   const meta = LIST_LABELS[listKey];
+  // Document types can be marked Required; the app’s own types (linked quotation, enquiry files) can’t be archived.
+  const isDocTypes = listKey === "documentTypes";
+  const fixed = (v: string) => isDocTypes && (v === QUOTATION_DOC_TYPE || v === CLIENT_DOC_TYPE);
   return (
-    <Card title={meta.title} description={meta.hint} className="h-fit">
+    <Card title={meta.title} description={meta.hint} className={`h-fit ${isDocTypes ? "md:col-span-2" : ""}`}>
       <ul className="space-y-1.5" data-testid={`list-${listKey}`}>
         {rows.map((it, i) => (
-          <li key={it.value || i} className="flex items-center gap-2">
+          <li key={it.value || i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
             <input
               aria-label={`${meta.title} ${i + 1}`}
               value={it.label}
               disabled={it.archived}
               onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))}
-              className={`${input} flex-1 ${it.archived ? "text-slate-400 line-through" : ""}`}
+              className={`${input} min-w-0 flex-1 ${it.archived ? "text-slate-400 line-through" : ""}`}
             />
-            <button type="button" aria-label="Move up" className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100" onClick={() => setRows(move(rows, i, -1))}>
+            {isDocTypes ? (
+              <label className="flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-1.5 text-xs text-slate-600 hover:bg-slate-100" title="Every project should have this document">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-red-700"
+                  aria-label={`${it.label || "New type"} required`}
+                  checked={!!it.required}
+                  disabled={it.archived}
+                  onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, required: e.target.checked } : x)))}
+                />
+                Required
+              </label>
+            ) : null}
+            <button type="button" aria-label="Move up" disabled={i === 0} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30" onClick={() => setRows(move(rows, i, -1))}>
               <Icon icon={ArrowUp} size={16} />
             </button>
-            {it.value && initial.some((x) => x.value === it.value) ? (
+            <button type="button" aria-label="Move down" disabled={i === rows.length - 1} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30" onClick={() => setRows(move(rows, i, 1))}>
+              <Icon icon={ArrowDown} size={16} />
+            </button>
+            {fixed(it.value) ? (
+              <span className="w-16 shrink-0 text-center text-[11px] text-slate-400" title="Used by the app; it can be renamed but not archived">
+                built in
+              </span>
+            ) : it.value && initial.some((x) => x.value === it.value) ? (
               <button
                 type="button"
                 className="h-9 w-16 rounded-lg px-1.5 text-xs text-slate-500 transition-colors hover:bg-slate-100"

@@ -1,9 +1,9 @@
 import { basicTotal, grandTotal } from "@/lib/calc";
 import type { Enquiry } from "@/lib/crm/types";
 import type { QuotationRecord } from "@/lib/data/types";
-import { STAGES } from "./config";
+import { CLIENT_DOC_TYPE, QUOTATION_DOC_TYPE, STAGES } from "./config";
 import { milestonesFromTerms, todayIso } from "./rules";
-import type { Project, Stage, StageKey, TemplateTask } from "./types";
+import type { Project, ProjectDocument, Stage, StageKey, TemplateTask } from "./types";
 
 export const newId = (p: string) =>
   `${p}_${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2)}`;
@@ -51,6 +51,42 @@ export function finalisationDate(e: Enquiry): string {
 }
 
 /** A project pre-filled from a Finalised enquiry, its accepted quotation and the PO / LOI (Section 1). */
+/** The linked quotation as a live-link document (no stored file: its PDF is made when downloaded). */
+export function quotationDocument(q: QuotationRecord, ctx: Pick<BuildContext, "createdBy" | "at">): ProjectDocument {
+  const rev = q.enquiryRevision ?? null;
+  return {
+    id: newId("pdoc"),
+    slot: QUOTATION_DOC_TYPE,
+    kind: "quotation",
+    quotationId: q.id,
+    source: "quotation",
+    fileId: "",
+    name: `Offer ${q.data.meta.offerNo || "–"}/${q.data.meta.revision || "00"}${rev !== null ? ` (R${rev})` : ""}`,
+    type: "application/pdf",
+    size: 0,
+    uploadedAt: ctx.at,
+    uploadedBy: ctx.createdBy,
+  };
+}
+
+/** The enquiry's stored attachments (client drawings, BOQ…) as "Client documents". The files are shared, not copied. */
+export function enquiryDocuments(e: Pick<Enquiry, "attachments">, ctx: Pick<BuildContext, "createdBy" | "at">): ProjectDocument[] {
+  return (e.attachments ?? [])
+    .filter((a) => a.fileId)
+    .map((a) => ({
+      id: newId("pdoc"),
+      slot: CLIENT_DOC_TYPE,
+      kind: "file" as const,
+      source: "enquiry" as const,
+      fileId: a.fileId!,
+      name: a.name,
+      type: a.type,
+      size: a.size,
+      uploadedAt: a.uploadedAt || ctx.at,
+      uploadedBy: a.uploadedBy || ctx.createdBy,
+    }));
+}
+
 export function projectFromEnquiry(e: Enquiry, q: QuotationRecord | null, ctx: BuildContext): Project {
   const valueWithGst = q ? grandTotal(q.data) : 0;
   const valueBasic = q ? basicTotal(q.data) : 0;
@@ -98,7 +134,8 @@ export function projectFromEnquiry(e: Enquiry, q: QuotationRecord | null, ctx: B
       payments: [],
       budget: {},
     },
-    documents: [],
+    documents: [...(q ? [quotationDocument(q, ctx)] : []), ...enquiryDocuments(e, ctx)],
+    quotationDocAdded: !!q,
     attendance: { enabled: true, enabledFrom: startDate, reminderTime: "" },
     stages: stagesFromTemplates(ctx.templates, ctx.createdBy, ctx.at),
     createdAt: ctx.at,

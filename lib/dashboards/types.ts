@@ -79,6 +79,8 @@ export interface FactoryProjectRow {
   lastUpdate: string | null;
   latestDelay: { reason: string; recordedAt: string } | null;
   tasks: FactoryTaskRow[];
+  /** Document types the project has a current document of (for the required-documents warning). */
+  docSlots: string[];
 }
 
 export interface ProcessLoad {
@@ -181,6 +183,8 @@ export interface SiteProjectRow {
   attendanceOn: boolean;
   /** Oldest first; the last entry is today. */
   days: DailyCheckDay[];
+  /** Document types the project has a current document of (for the required-documents warning). */
+  docSlots: string[];
 }
 
 export interface SiteBoard {

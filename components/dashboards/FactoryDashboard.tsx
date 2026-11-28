@@ -14,7 +14,7 @@ import { useFactoryBoard, useSetFactoryPin } from "@/lib/dashboards/hooks";
 import type { FactoryHealth, FactoryProjectRow } from "@/lib/dashboards/types";
 import { formatDate } from "@/lib/format";
 import { useList } from "@/lib/settings/hooks";
-import { DelayList, HBars, LookaheadList, PlanBar, PlanLegend, StatTile, WeekBars, sinceLabel } from "./parts";
+import { DelayList, HBars, LookaheadList, MissingDocs, PlanBar, PlanLegend, StatTile, WeekBars, sinceLabel } from "./parts";
 
 const HEALTH: Record<FactoryHealth, { label: string; cls: string }> = {
   blocked: { label: "Blocked", cls: "bg-red-100 text-red-800" },
@@ -171,6 +171,8 @@ function ProjectCard({ row, rank, today }: { row: FactoryProjectRow; rank: numbe
               <span className="block text-xs text-slate-500">updated {sinceLabel(row.lastUpdate, today)}</span>
             </Fact>
           </div>
+
+          <MissingDocs projectId={row.projectId} docSlots={row.docSlots} />
 
           {row.latestDelay ? (
             <p className="mt-2 text-xs text-slate-600">

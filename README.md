@@ -239,7 +239,14 @@ admins and roles with the Payroll page (needs `20261128000000_custom_roles.sql`)
     (erection, quality, handover) and **Labour** (fabrication, erection, casual). Each line shows budget, % of budget
     and **actual** spend from Expenses (% used, red when over); planned and actual margin; casual labour from
     attendance; employee labour on site (man-days × salary ÷ 30, information only).
-  - E. Documents (PO, drawings, anchor plan, contract, handover…).
+  - E. **Documents** – grouped by type ("Anchor bolt plan · 2 files"), in the order of Settings → Lists → *Document
+    types*, with a **Required** checklist (missing types in red; also shown on the Factory and Site dashboards).
+    *Upload* (or *+ Add* on a group) takes PDF, photos (JPG, PNG, WebP, HEIC) and CAD drawings (DWG, DXF), 10 MB each,
+    with drag-and-drop on desktop, an optional revision ("R2") and *Replaces* (suggested when the name matches): the
+    older file stays, greyed, under "older versions". Admin, the project manager and site engineers on the team can
+    upload; only Admin removes. The **linked quotation** is added automatically as *Quotation* ("Offer 15/01 (R1)":
+    *Open*, or *PDF* made at that moment), also for projects created before this; the enquiry's attachments are added
+    as *Client documents*.
   - F. **Timeline** – every automatic entry plus notes with tags, photos / files and @mentions; filter by type, tag,
     person and dates; click an entry to jump to its task, payment or expense.
 - **Progress tab** – 6 stage cards (weights 10 / 40 / 10 / 30 / 5 / 5, admin-editable, total 100; *Not applicable*
@@ -378,7 +385,9 @@ Admin only (the Accountant sees just the Payroll tab).
 Admin only (`/settings`). Changes apply to new data; list entries are archived rather than deleted.
 
 - **Project task templates** – the default tasks of each stage.
-- **Lists** – delay reasons, project roles, external party types, note tags, units, trades (casual workers).
+- **Lists** – project document types (order = order of groups; tick *Required*; *Quotation* and *Client documents*
+  are built in and can be renamed, not archived), delay reasons, project roles, external party types, note tags,
+  units, trades (casual workers).
 - **Attendance** – default reminder time; factory and office supervisors.
 - **Payroll** – first payroll month (empty = month of the first attendance record).
 
@@ -474,7 +483,10 @@ in as, the steps and the expected result (✅). To switch user: avatar → **Log
 | D5 | Admin | D. Money: **Edit value**, **+ Add variation**, **Edit milestones**, **+ Record payment** | Revised value, received %, outstanding and overdue milestones update; header tiles update |
 | D6 | Admin | D. Money → **Edit budget**: enter all 5 lines incl. **Labour** | Budget table shows Design, Factory work, Transportation, Site work, Labour with % of budget; planned margin updates |
 | D7 | Admin | Open Nagpur (PRJ-2026-001) → Money | *Actual* per work stage with % used; actual margin; casual labour line; *Employee labour on site* (expand) |
-| D8 | Admin | E. Documents: upload a PO PDF | Listed; opens / downloads |
+| D8 | Admin | E. Documents: upload a PO PDF | Listed under *PO / LOI · 1 file*; opens / downloads; PO ticked in the Required checklist |
+| D9 | Admin | Nagpur → E. Documents | *Quotation · 1 file* with the linked offer; *Open* and *PDF* work |
+| D10 | Priya (PM) | Anchor bolt plan → *+ Add* a file with R1, then the same file name again with R2 | *Replaces* is suggested; R2 current, R1 under "1 older version"; no *Remove* for Priya |
+| D11 | Admin | Settings → Lists → Document types: rename one, add "Site photos" with *Required*, move it up | The project's groups and checklist follow; dashboards show "Missing documents: Site photos" |
 | D9 | Admin | F. Timeline: add a note with a tag, a photo and @Rahul | Note appears; Rahul gets 🔔 *mention* |
 | D10 | Admin | Timeline filters (type *Expenses*, person, dates); click an expense entry | Filtered list; clicking opens the Expenses tab with that expense expanded |
 | D11 | Staff (`priya@`) | Open Nagpur (she is PM) | No Money section, no value / budget tiles, no payment entries in the timeline |
