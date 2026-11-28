@@ -9,6 +9,7 @@ A web app for running Poojary Prefab Pvt. Ltd.: from the first client enquiry, t
 | CRM | Enquiries, Clients | Admin, Staff | Clients with contacts; enquiries from first call to Finalised / Declined |
 | Projects | Projects, My tasks | Admin, Staff (own team) | Auto-created from Finalised enquiries; details, money, progress, timeline |
 | Dashboards | Factory dashboard, Site dashboard | Admin, roles given these pages | All projects' factory work by priority; every site's progress, delays, crews and daily updates (no money) |
+| Design | Design | Admin, roles given this page | Drawing team: every open project, its missing documents, and uploads of drawings and other documents (no money) |
 | Attendance | Attendance (+ project / employee tabs) | Admin, supervisors, site managers | Daily attendance at sites, factory and office; casual workers |
 | Expenses | Expenses (+ project tab) | Admin, Accountant, site managers | Request → accept → pay; budget vs actual |
 | Payroll | Payroll (+ employee tab) | Admin, Accountant | Salary from attendance, advances, close month, settle all, salary slips |
@@ -54,10 +55,12 @@ After pulling new code, restart `npm run dev` (new pages) and use **Reset demo d
 2. **Create the tables:** Supabase dashboard → *SQL Editor* → paste and run
    [`supabase/migrations/20261124000000_init.sql`](supabase/migrations/20261124000000_init.sql), then
    [`supabase/migrations/20261124000001_grants.sql`](supabase/migrations/20261124000001_grants.sql), then
-   [`supabase/migrations/20261128000000_custom_roles.sql`](supabase/migrations/20261128000000_custom_roles.sql) (or `supabase db push`
+   [`supabase/migrations/20261128000000_custom_roles.sql`](supabase/migrations/20261128000000_custom_roles.sql), then
+   [`supabase/migrations/20261129000000_files_50mb.sql`](supabase/migrations/20261129000000_files_50mb.sql) (or `supabase db push`
    with the Supabase CLI). They create `app_records`, `file_meta`, the table privileges, the row level security
    policies, realtime and the private Storage bucket `files`. *permission denied for table app_records* means the
-   second file has not been run.
+   second file has not been run. The last file raises the Storage limit to 50 MB per file for project documents; also
+   check that *Storage → Settings → Upload file size limit* for the whole project is at least 50 MB.
 3. **Keys:** copy `.env.example` to `.env.local` and fill in from *Project Settings → API*: the project URL, the
    publishable / anon key and the service-role / secret key. The service-role key is used only by the server (API routes
    and the seed script) – never give it a `NEXT_PUBLIC_` name.
@@ -116,7 +119,8 @@ What the demo data contains (dates are relative to today):
 ## Roles & permissions
 
 **Custom roles.** Admins manage roles in **Settings → Roles and access**: add, rename or delete a role and tick the
-pages it can open (Enquiries, Clients, Quotation Maker, Projects, My tasks, Attendance, Payroll, Expenses). Give a
+pages it can open (Enquiries, Clients, Quotation Maker, Projects, Factory dashboard, Site dashboard, Design, My tasks,
+Attendance, Payroll, Expenses). Give a
 person a role on their employee page → **Application login → Role**.
 
 - **Admin** is built in: every page, and the only role that manages Employees, Settings and roles. It can't be edited
@@ -125,7 +129,11 @@ person a role on their employee page → **Application login → Role**.
 - Inside a page, every non-Admin role works like the Staff column below, except:
   a role with **Payroll** does what the Accountant column shows for payroll (including an employee's Payroll tab);
   a role with **Expenses** sees all expenses and marks accepted ones as paid;
-  a role with **Attendance** marks factory and office attendance like a supervisor of both (last 7 days).
+  a role with **Attendance** marks factory and office attendance like a supervisor of both (last 7 days);
+  a role with **Design** sees every active and on-hold project on the Design page and uploads documents to them
+  (any type except *Quotation*), also to projects whose team it is not on. It does not open those projects' other
+  pages unless it also has Projects and is on the team. For a drawing team, create a role such as "Design" with the
+  Design page (plus Projects and My tasks if they also work on project tasks).
 - Everything marked Admin-only below stays Admin-only for every custom role.
 - A role still given to a login can't be deleted; change those people's role first.
 
@@ -241,10 +249,13 @@ admins and roles with the Payroll page (needs `20261128000000_custom_roles.sql`)
     attendance; employee labour on site (man-days × salary ÷ 30, information only).
   - E. **Documents** – grouped by type ("Anchor bolt plan · 2 files"), in the order of Settings → Lists → *Document
     types*, with a **Required** checklist (missing types in red; also shown on the Factory and Site dashboards).
-    *Upload* (or *+ Add* on a group) takes PDF, photos (JPG, PNG, WebP, HEIC) and CAD drawings (DWG, DXF), 10 MB each,
-    with drag-and-drop on desktop, an optional revision ("R2") and *Replaces* (suggested when the name matches): the
-    older file stays, greyed, under "older versions". Admin, the project manager and site engineers on the team can
-    upload; only Admin removes. The **linked quotation** is added automatically as *Quotation* ("Offer 15/01 (R1)":
+    *Upload* (or *+ Add* on a group) takes several files at once – PDF, photos (JPG, PNG, WebP, HEIC) and CAD drawings
+    (DWG, DXF), 50 MB each – with drag-and-drop on desktop, a status per file (failed files can be tried again without
+    sending the others twice), an optional revision (the next one is suggested: R2 → R3, A → B) and *Replaces*
+    (suggested when the name matches): the older file stays, greyed, under "older versions". Admin, the project
+    manager and site engineers on the team, and roles with the **Design** page can upload while the project is active
+    or on hold; only Admin removes. Each upload adds a timeline entry, and the project manager and site engineers get
+    one notification per batch. The **linked quotation** is added automatically as *Quotation* ("Offer 15/01 (R1)":
     *Open*, or *PDF* made at that moment), also for projects created before this; the enquiry's attachments are added
     as *Client documents*.
   - F. **Timeline** – every automatic entry plus notes with tags, photos / files and @mentions; filter by type, tag,
@@ -278,6 +289,26 @@ Roles and access). Neither shows money. Calculations live in `lib/dashboards/` (
   (flagged when a behind site has fewer people than usual), progress per man-day, late or blocked tasks, open delay
   reasons. Side panels: crew today, site tasks due in 14 days, site delay reasons (90 days), stages late without a
   delay reason. *My sites only* is on by default for people on a site's team (off for Admin).
+
+#### Design (`/design`)
+
+For the people who make shop drawings, structural drawings, anchor bolt plans and the like. Anyone whose role has the
+**Design** page sees every **active and on-hold** project (completed and cancelled ones are left out). No money is
+shown. Rows are built in `lib/dashboards/design.ts` (pure, unit-tested); the screen is
+`components/design/DesignScreen.tsx`.
+
+- **Tiles:** open projects (and how many are on hold), projects missing required documents, files uploaded in the
+  last 7 days.
+- **Project cards**, most missing first, then the longest without an upload: code, name, client, PM, *On hold* badge,
+  Design stage progress, the **missing required document types** as red chips (click one to upload that type), the
+  last upload ("Shop drawings R2 · 2 days ago · Sneha"), *Documents (n)* and *Upload*. Search by code, project or
+  client; filter *Active / On hold*; *Missing only*.
+- **Project panel** (beside the list on desktop, full screen on a phone): the project's documents grouped by type,
+  older versions folded away, *Upload* and *+ Add* per type. *Open project* shows only for people who can open it.
+- **Upload:** choose the document type (all active types from Settings → Lists except *Quotation*), drop or choose
+  several files, check the revision (R0 for a type with no documents yet, otherwise the next one), and optionally
+  pick the version it replaces (one file at a time). The files land in the project's E. Documents, exactly as if
+  uploaded there.
 
 ### 5. Attendance
 
@@ -409,6 +440,7 @@ related page.
 | 🧾 | Expense accepted / paid / rejected | The requester |
 | 📊 | Work stage spend reached 80 % / 100 % of budget | Admins |
 | 💰 | Last month's salaries not fully paid (from the 3rd) | Admins, Accountant |
+| 📤 | Documents uploaded to a project (one per batch: type, revision, number of files, who) | Project manager and site engineers on the team, except the uploader |
 | – | Enquiry needs follow-up (separate *Enquiry follow-ups* list in the bell) | Assignee (or creator) |
 
 ### 11. Files
@@ -416,7 +448,8 @@ related page.
 Uploads (enquiry attachments, employee documents, project documents, progress / note / attendance photos, expense
 bills) are kept in the private Supabase Storage bucket `files` (browser-only mode: **IndexedDB**); records keep only a
 file id. Photos are shrunk on the device (longest
-side 1600 px) and the time taken is read from the photo. Limit 10 MB per file. Quotation photos live inside the
+side 1600 px) and the time taken is read from the photo. Limit 10 MB per file, except project documents: 50 MB
+(`MAX_PROJECT_DOC_BYTES`; the Supabase bucket limit is set by `20261129000000_files_50mb.sql`). Quotation photos live inside the
 quotation because they are drawn into the PDF.
 
 ---
@@ -608,6 +641,10 @@ in as, the steps and the expected result (✅). To switch user: avatar → **Log
 | K3 | Admin | ☰ → *Factory dashboard* | Godown at Sanaswadi first (Behind, raw-material / plant-capacity delays); *Pin to top* Talegaon with a reason → it moves to 01; *Unpin* → back |
 | K4 | Admin | ☰ → *Site dashboard* | Nagpur and Sanaswadi in *Daily updates* with a 7-day strip; post a progress update on Nagpur → *Progress posted* for today |
 | K5 | Admin, then Accountant | Settings → Roles → tick *Factory dashboard* for Accountant → sign in as accounts@poojary.net | Menu shows Factory dashboard; no ₹ anywhere; `/sites` shows *No access* |
+| K6 | Admin | ☰ → *Design* | Only active and on-hold projects; Nagpur shows *Missing: PO / LOI, Approved drawings, Anchor bolt plan* |
+| K7 | Admin | Design → Nagpur chip *Anchor bolt plan* → drop 2 PDFs and 1 DWG → *Upload 3 files* | Revision R0 suggested; "3 documents added"; the chip turns into a tick; the project's E. Documents and Timeline show the 3 files |
+| K8 | Admin, then Priya | Settings → Roles → add role "Design" with only *Design* → give it to Sneha → as Sneha upload *Shop drawings* to Nagpur (not on its team) → sign in as Priya | Sneha's menu shows Design only; upload works; Priya's 🔔 has one *Documents uploaded · PRJ-…* notice that opens the documents |
+| K9 | Design role | Upload a file over 50 MB, or choose *Quotation* | The file is refused before upload; *Quotation* is not in the type list |
 
 ### L. Phone checks (narrow window ≈ 390 px or a real phone)
 
@@ -724,6 +761,8 @@ Suggested tables: `quotations`, `clients`, `client_contacts`, `enquiries`, `enqu
 | ☰ menu entries and who sees them | `lib/navigation.ts` |
 | CRM lists (lead sources, decline reasons, building types) and the follow-up days | `lib/crm/config.ts` |
 | Project stages, weights, budget work stages, default task templates and lists | `lib/projects/config.ts` |
+| Project document file types and size limit (`PROJECT_DOC_EXTENSIONS`, `MAX_PROJECT_DOC_BYTES`) | `lib/projects/config.ts` (+ the bucket limit in `supabase/migrations/`) |
+| Design screen (project cards, missing documents, order) | `components/design/DesignScreen.tsx`, `lib/dashboards/design.ts` |
 | Project / employee tabs | `lib/projects/tabs.ts`, `lib/employees/tabs.ts` |
 | Attendance statuses, edit window (7 days), reminder times, photo distance | `lib/attendance/config.ts` |
 | Expense statuses, payment modes, future-date limit, budget alert levels | `lib/expenses/config.ts` |

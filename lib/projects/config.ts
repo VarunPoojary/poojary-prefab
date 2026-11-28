@@ -135,7 +135,10 @@ export const DEFAULT_LISTS = {
 export const QUOTATION_DOC_TYPE = "quotation";
 export const CLIENT_DOC_TYPE = "client_docs";
 
-/** Files allowed as project documents: PDF, photos and CAD drawings, 10 MB each. */
+/** Largest project document (drawing sets and DWGs run large). Same as the Supabase "files" bucket limit. */
+export const MAX_PROJECT_DOC_BYTES = 50 * 1024 * 1024;
+
+/** Files allowed as project documents: PDF, photos and CAD drawings, up to MAX_PROJECT_DOC_BYTES each. */
 export const PROJECT_DOC_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.dwg,.dxf";
 export const PROJECT_DOC_EXTENSIONS = ["pdf", "jpg", "jpeg", "png", "webp", "heic", "heif", "dwg", "dxf"];
 

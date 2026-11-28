@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Banknote, Bell, BellRing, CalendarDays, ChartColumn, ClipboardCheck, Layers, MessageSquare, Receipt, ReceiptText, Wallet } from "lucide-react";
+import { AlertTriangle, Banknote, Bell, BellRing, CalendarDays, ChartColumn, ClipboardCheck, FileUp, Layers, MessageSquare, Receipt, ReceiptText, Wallet } from "lucide-react";
 import { Icon, type LucideIcon } from "@/components/ui/icons";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useNotifications } from "@/lib/crm/hooks";
@@ -23,6 +23,7 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   expense_decided: ReceiptText,
   budget_alert: ChartColumn,
   payroll_due: Wallet,
+  document_uploaded: FileUp,
 };
 
 const POPUPS_KEY = "pppl.popups-shown.v1";

@@ -9,7 +9,8 @@ export type NotificationKind =
   | "expense_requested"
   | "expense_decided"
   | "budget_alert"
-  | "payroll_due";
+  | "payroll_due"
+  | "document_uploaded";
 
 /** A stored notification for one user. CRM follow-ups are computed separately and merged in the bell. */
 export interface AppNotification {

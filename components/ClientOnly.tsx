@@ -31,6 +31,7 @@ const SCREENS = {
   myTasks: dynamic(() => import("./projects/MyTasks").then((m) => m.MyTasks), { ssr: false, loading }),
   factoryDashboard: dynamic(() => import("./dashboards/FactoryDashboard").then((m) => m.FactoryDashboard), { ssr: false, loading }),
   siteDashboard: dynamic(() => import("./dashboards/SiteDashboard").then((m) => m.SiteDashboard), { ssr: false, loading }),
+  designDesk: dynamic(() => import("./design/DesignScreen").then((m) => m.DesignScreen), { ssr: false, loading }),
   projectAttendance: dynamic(() => import("./projects/ProjectScreens").then((m) => m.ProjectAttendanceTab), { ssr: false, loading }),
   employeeAttendance: dynamic(() => import("./employees/EmployeeDetail").then((m) => m.EmployeeAttendanceTab), { ssr: false, loading }),
   attendance: dynamic(() => import("./attendance/AttendancePage").then((m) => m.AttendancePage), { ssr: false, loading }),

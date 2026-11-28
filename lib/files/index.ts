@@ -11,20 +11,21 @@ import type { FileStore, PhotoRef, StoredFileMeta } from "./types";
  */
 export const fileStore: FileStore = cloudEnabled ? new SupabaseFileStore(supabase) : new IndexedDbFileStore();
 
-/** Largest file accepted for upload (photos are shrunk first). */
+/** Largest file accepted for upload by default (photos are shrunk first). Project documents allow more. */
 export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export class FileTooLargeError extends Error {
-  constructor(name: string, size: number) {
-    super(`${name} is ${(size / 1024 / 1024).toFixed(1)} MB; the limit is ${MAX_FILE_BYTES / 1024 / 1024} MB.`);
+  constructor(name: string, size: number, max = MAX_FILE_BYTES) {
+    super(`${name} is ${(size / 1024 / 1024).toFixed(1)} MB; the limit is ${max / 1024 / 1024} MB.`);
     this.name = "FileTooLargeError";
   }
 }
 
 /** Stores any file (photos are shrunk first) and returns its metadata. */
-export async function uploadFile(file: File): Promise<StoredFileMeta & { takenAt: string | null; width: number; height: number }> {
+export async function uploadFile(file: File, opts: { maxBytes?: number } = {}): Promise<StoredFileMeta & { takenAt: string | null; width: number; height: number }> {
+  const max = opts.maxBytes ?? MAX_FILE_BYTES;
   const img = await prepareImage(file);
-  if (img.blob.size > MAX_FILE_BYTES) throw new FileTooLargeError(file.name, img.blob.size);
+  if (img.blob.size > max) throw new FileTooLargeError(file.name, img.blob.size, max);
   const meta = await fileStore.put(img.blob, img.name);
   return { ...meta, takenAt: img.takenAt, width: img.width, height: img.height };
 }

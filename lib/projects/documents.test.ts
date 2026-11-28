@@ -96,7 +96,7 @@ describe("project documents", () => {
     const id = await projectId("Nagpur");
     await expect(repo.addDocument(id, pdf({ slot: "nope" }))).rejects.toThrow(/document type/);
     await expect(repo.addDocument(id, pdf({ name: "notes.exe" }))).rejects.toThrow(/only PDF/);
-    await expect(repo.addDocument(id, pdf({ size: 11 * 1024 * 1024 }))).rejects.toThrow(/10 MB/);
+    await expect(repo.addDocument(id, pdf({ size: 51 * 1024 * 1024 }))).rejects.toThrow(/50 MB/);
     expect((await repo.addDocument(id, pdf({ name: "Layout.DWG", type: "" }))).documents.at(-1)!.name).toBe("Layout.DWG");
     await settingsRepo.saveList("documentTypes", settings.read().lists.documentTypes.map((t) => (t.value === "contract" ? { ...t, archived: true } : t)));
     await expect(repo.addDocument(id, pdf({ slot: "contract" }))).rejects.toThrow(/document type/);

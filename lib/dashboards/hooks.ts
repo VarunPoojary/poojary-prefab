@@ -12,6 +12,7 @@ import { buildSiteBoard } from "./site";
 export const boardKeys = {
   factory: ["projects", "board", "factory"] as const,
   site: ["projects", "board", "site"] as const,
+  design: ["projects", "board", "design"] as const,
 };
 
 const clockNow = () => {
@@ -43,6 +44,11 @@ export function useSiteBoard() {
     },
     refetchInterval: 60_000,
   });
+}
+
+/** Raw cross-project data for the Design screen; the screen builds its rows with the document types it has. */
+export function useDesignData() {
+  return useQuery({ queryKey: boardKeys.design, queryFn: () => projectRepo.dashboardData("design"), refetchInterval: 60_000 });
 }
 
 export function useSetFactoryPin() {

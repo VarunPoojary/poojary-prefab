@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronDown, ChevronUp, CircleAlert, Download, ExternalLink, FileText, Image as ImageIcon, PencilRuler, Plus, Upload } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, CircleAlert, Download, ExternalLink, FileText, Image as ImageIcon, PencilRuler, Plus, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { ErrorList, useUserName } from "@/components/crm/ui";
@@ -10,14 +10,15 @@ import { Button, Card, Select, TextField } from "@/components/ui/fields";
 import { Icon, type LucideIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/overlays";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { roleHasPage } from "@/lib/auth/roles";
 import { quotationRepo } from "@/lib/data";
 import { fileStore, uploadFile } from "@/lib/files";
 import { formatBytes, formatDate } from "@/lib/format";
 import { projectRepo } from "@/lib/projects";
-import { PROJECT_DOC_ACCEPT, PROJECT_DOC_EXTENSIONS } from "@/lib/projects/config";
+import { MAX_PROJECT_DOC_BYTES, PROJECT_DOC_ACCEPT, PROJECT_DOC_EXTENSIONS, QUOTATION_DOC_TYPE } from "@/lib/projects/config";
 import { useProjectMutation } from "@/lib/projects/hooks";
-import { isSiteManager, todayIso } from "@/lib/projects/rules";
-import type { ListItem, Project, ProjectDocument } from "@/lib/projects/types";
+import { isSiteManager, nextRevision, todayIso } from "@/lib/projects/rules";
+import type { ListItem, NewProjectDocument, Project, ProjectDocument } from "@/lib/projects/types";
 import { useSettings } from "@/lib/settings/hooks";
 import { defaultFileName } from "@/lib/template";
 
@@ -26,71 +27,138 @@ const isAllowed = (name: string) => PROJECT_DOC_EXTENSIONS.includes(extOf(name))
 const iconFor = (d: ProjectDocument): LucideIcon => (d.type.startsWith("image/") ? ImageIcon : ["dwg", "dxf"].includes(extOf(d.name)) ? PencilRuler : FileText);
 const baseName = (n: string) => n.replace(/\.[^.]+$/, "").toLowerCase();
 
-/** Who may upload: Admin always; the PM and site engineers on the team while the project is active or on hold. */
+/** Who may upload: Admin always; the PM and site engineers on the team, and roles with the Design page, while the project is active or on hold. */
 export function useCanUploadDocuments(p: Project) {
   const { user } = useAuth();
   const [today] = useState(() => todayIso());
   if (!user) return false;
   if (user.role === "admin") return true;
-  return (p.status === "active" || p.status === "on_hold") && isSiteManager(p, user.id, today);
+  return (p.status === "active" || p.status === "on_hold") && (isSiteManager(p, user.id, today) || roleHasPage(user.role, "design"));
+}
+
+/** Types a user may upload to: all active ones; the Quotation type only for Admin and the project's site managers. */
+export function useUploadTypes(p: Project): ListItem[] {
+  const { user } = useAuth();
+  const { data: settings } = useSettings();
+  const [today] = useState(() => todayIso());
+  const active = (settings?.lists.documentTypes ?? []).filter((t) => !t.archived);
+  const manager = !!user && (user.role === "admin" || isSiteManager(p, user.id, today));
+  return manager ? active : active.filter((t) => t.value !== QUOTATION_DOC_TYPE);
 }
 
 /* ---------- upload dialog ---------- */
 
-function UploadDialog({ p, types, initialType, onClose }: { p: Project; types: ListItem[]; initialType: string; onClose: () => void }) {
+type Chosen = { key: string; file: File; status: "ready" | "uploading" | "stored" | "failed"; error?: string; meta?: { id: string; name: string; type: string; size: number } };
+
+const MAX_MB = MAX_PROJECT_DOC_BYTES / 1024 / 1024;
+/** Files stored at the same time. */
+const PARALLEL = 3;
+
+/**
+ * Add one or more documents of one type. Files are stored first (several at a time), then added to the project in one
+ * change, so the team gets one notice. Files that fail stay listed for another try; stored ones are not sent again.
+ * `suggestFirst`: offer R0 when the type has no document yet (the Design screen, where most uploads are drawings).
+ */
+export function UploadDialog({ p, types, initialType, onClose, suggestFirst = false }: { p: Project; types: ListItem[]; initialType: string; onClose: () => void; suggestFirst?: boolean }) {
   const toast = useToast();
-  const add = useProjectMutation(({ doc, replaces }: { doc: Parameters<typeof projectRepo.addDocument>[1]; replaces?: string }) => projectRepo.addDocument(p.id, doc, { replaces }));
+  const add = useProjectMutation((items: { doc: NewProjectDocument; replaces?: string }[]) => projectRepo.addDocuments(p.id, items));
   const [slot, setSlot] = useState(initialType);
-  const [files, setFiles] = useState<File[]>([]);
-  const [revision, setRevision] = useState("");
+  const [chosen, setChosen] = useState<Chosen[]>([]);
+  const [revision, setRevision] = useState<string | null>(null);
   const [replaces, setReplaces] = useState("");
   const [issues, setIssues] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [over, setOver] = useState(false);
   const input = useRef<HTMLInputElement>(null);
 
-  const current = p.documents.filter((d) => d.slot === slot && !d.supersededBy && d.kind !== "quotation");
+  const current = p.documents.filter((d) => d.slot === slot && !d.supersededBy && d.kind !== "quotation").sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+  const single = chosen.length === 1;
+  const replacing = single && replaces ? current.find((d) => d.id === replaces) : undefined;
+  // The next revision after the document being replaced, or the latest of this type. The user's own entry wins.
+  const base = replacing ?? current[0];
+  const suggested = base ? (base.revision ? nextRevision(base.revision) : "") : suggestFirst ? nextRevision("") : "";
+  const rev = revision ?? suggested;
+
   const pick = (list: File[]) => {
     const bad = list.filter((f) => !isAllowed(f.name));
-    setIssues(bad.length ? [`Not added (only PDF, photos and DWG/DXF): ${bad.map((f) => f.name).join(", ")}`] : []);
-    const ok = list.filter((f) => isAllowed(f.name));
-    setFiles(ok);
+    const big = list.filter((f) => isAllowed(f.name) && f.size > MAX_PROJECT_DOC_BYTES);
+    setIssues([
+      ...(bad.length ? [`Not added (only PDF, photos and DWG/DXF): ${bad.map((f) => f.name).join(", ")}`] : []),
+      ...(big.length ? [`Larger than ${MAX_MB} MB: ${big.map((f) => `${f.name} (${formatBytes(f.size)})`).join(", ")}`] : []),
+    ]);
+    const ok = list.filter((f) => isAllowed(f.name) && f.size <= MAX_PROJECT_DOC_BYTES);
+    const next = [...chosen];
+    for (const f of ok) if (!next.some((c) => c.file.name === f.name && c.file.size === f.size)) next.push({ key: `${f.name}:${f.size}:${f.lastModified}`, file: f, status: "ready" });
+    setChosen(next);
     // A single file with the same name as a current document of this type is most likely its new version.
-    const same = ok.length === 1 ? current.find((d) => baseName(d.name) === baseName(ok[0].name)) : undefined;
+    const same = next.length === 1 ? current.find((d) => baseName(d.name) === baseName(next[0].file.name)) : undefined;
     setReplaces(same?.id ?? "");
   };
 
+  const patch = (key: string, v: Partial<Chosen>) => setChosen((list) => list.map((c) => (c.key === key ? { ...c, ...v } : c)));
+
   const submit = async () => {
-    if (!files.length) return setIssues(["Choose at least one file."]);
+    if (!chosen.length) return setIssues(["Choose at least one file."]);
     setBusy(true);
-    const errors: string[] = [];
-    let done = 0;
-    for (const f of files) {
+    setIssues([]);
+    // 1. Store the files not stored yet, a few at a time.
+    const stored = new Map(chosen.filter((c) => c.meta).map((c) => [c.key, c.meta!]));
+    const queue = chosen.filter((c) => !c.meta);
+    const worker = async () => {
+      for (let c = queue.shift(); c; c = queue.shift()) {
+        patch(c.key, { status: "uploading", error: undefined });
+        try {
+          const m = await uploadFile(c.file, { maxBytes: MAX_PROJECT_DOC_BYTES });
+          const meta = { id: m.id, name: m.name, type: m.type, size: m.size };
+          stored.set(c.key, meta);
+          patch(c.key, { status: "stored", meta });
+        } catch (e) {
+          patch(c.key, { status: "failed", error: e instanceof Error ? e.message : String(e) });
+        }
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(PARALLEL, queue.length) }, worker));
+    const ready = chosen.filter((c) => stored.has(c.key));
+    // 2. Add every stored file to the project in one change.
+    if (ready.length) {
       try {
-        const m = await uploadFile(f);
-        await add.mutateAsync({ doc: { slot, fileId: m.id, name: m.name, type: m.type, size: m.size, revision }, replaces: files.length === 1 && replaces ? replaces : undefined });
-        done += 1;
+        await add.mutateAsync(
+          ready.map((c) => {
+            const m = stored.get(c.key)!;
+            return { doc: { slot, fileId: m.id, name: m.name, type: m.type, size: m.size, revision: rev }, replaces: single && replaces ? replaces : undefined };
+          }),
+        );
+        const left = chosen.filter((c) => !stored.has(c.key));
+        setChosen((list) => list.filter((c) => !stored.has(c.key)));
+        toast(`${ready.length} document${ready.length === 1 ? "" : "s"} added to ${p.code}`);
+        if (!left.length) {
+          setBusy(false);
+          return onClose();
+        }
+        setIssues([`${left.length} file${left.length === 1 ? "" : "s"} could not be uploaded. Try again, or remove ${left.length === 1 ? "it" : "them"}.`]);
       } catch (e) {
-        errors.push(`${f.name}: ${e instanceof Error ? e.message : String(e)}`);
+        // The files are stored; trying again only adds them to the project.
+        setIssues([e instanceof Error ? e.message : String(e)]);
       }
     }
     setBusy(false);
-    if (done) toast(`${done} document${done === 1 ? "" : "s"} added`);
-    if (errors.length) setIssues(errors);
-    else onClose();
   };
+
+  const failed = chosen.some((c) => c.status === "failed");
 
   return (
     <Modal
       open
-      onClose={onClose}
-      title="Add documents"
+      onClose={busy ? () => undefined : onClose}
+      title={`Add documents · ${p.code}`}
       footer={
         <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" disabled={busy || !files.length} onClick={() => void submit()}>
+          <Button onClick={onClose} disabled={busy}>
+            Cancel
+          </Button>
+          <Button variant="primary" disabled={busy || !chosen.length} onClick={() => void submit()}>
             <Icon icon={Upload} />
-            {busy ? "Uploading…" : `Upload${files.length > 1 ? ` ${files.length} files` : ""}`}
+            {busy ? "Uploading…" : failed ? "Try again" : `Upload${chosen.length > 1 ? ` ${chosen.length} files` : ""}`}
           </Button>
         </>
       }
@@ -102,6 +170,7 @@ function UploadDialog({ p, types, initialType, onClose }: { p: Project; types: L
           onChange={(v) => {
             setSlot(v);
             setReplaces("");
+            setRevision(null);
           }}
           options={types.map((t) => ({ value: t.value, label: t.label }))}
         />
@@ -114,39 +183,65 @@ function UploadDialog({ p, types, initialType, onClose }: { p: Project; types: L
           onDrop={(e) => {
             e.preventDefault();
             setOver(false);
-            pick(Array.from(e.dataTransfer.files));
+            if (!busy) pick(Array.from(e.dataTransfer.files));
           }}
           className={`rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors ${over ? "border-red-700 bg-red-50" : "border-slate-300 bg-slate-50"}`}
+          data-testid="drop-zone"
         >
           <input ref={input} type="file" multiple accept={PROJECT_DOC_ACCEPT} className="hidden" aria-label="Choose documents" onChange={(e) => (pick(Array.from(e.target.files ?? [])), (e.target.value = ""))} />
-          <Button onClick={() => input.current?.click()}>
+          <Button onClick={() => input.current?.click()} disabled={busy}>
             <Icon icon={Plus} />
-            Choose files
+            {chosen.length ? "Add more files" : "Choose files"}
           </Button>
           <p className="mt-2 hidden text-xs text-slate-500 sm:block">or drop them here</p>
-          <p className="mt-1 text-xs text-slate-500">PDF, photos (JPG, PNG, WebP, HEIC) or CAD drawings (DWG, DXF), up to 10 MB each</p>
+          <p className="mt-1 text-xs text-slate-500">PDF, photos (JPG, PNG, WebP, HEIC) or CAD drawings (DWG, DXF), up to {MAX_MB} MB each</p>
         </div>
-        {files.length ? (
-          <ul className="space-y-1 text-sm" data-testid="chosen-files">
-            {files.map((f) => (
-              <li key={f.name} className="flex items-center justify-between gap-3">
-                <span className="min-w-0 truncate text-slate-900">{f.name}</span>
-                <span className="shrink-0 text-xs text-slate-500">{formatBytes(f.size)}</span>
+        {chosen.length ? (
+          <ul className="divide-y divide-slate-100 text-sm" data-testid="chosen-files">
+            {chosen.map((c) => (
+              <li key={c.key} className="flex items-center justify-between gap-3 py-1.5">
+                <span className="min-w-0">
+                  <span className="block truncate text-slate-900">{c.file.name}</span>
+                  {c.error ? <span className="block text-xs text-red-700">{c.error}</span> : null}
+                </span>
+                <span className="flex shrink-0 items-center gap-2 text-xs text-slate-500">
+                  {c.status === "uploading" ? <span className="text-slate-700">Uploading…</span> : c.status === "stored" ? <Icon icon={CheckCircle2} size={14} className="text-emerald-700" /> : c.status === "failed" ? <Icon icon={CircleAlert} size={14} className="text-red-700" /> : null}
+                  {formatBytes(c.file.size)}
+                  {!busy ? (
+                    <button
+                      type="button"
+                      aria-label={`Remove ${c.file.name}`}
+                      onClick={() => setChosen((list) => list.filter((x) => x.key !== c.key))}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    >
+                      <Icon icon={X} size={14} />
+                    </button>
+                  ) : null}
+                </span>
               </li>
             ))}
           </ul>
         ) : null}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <TextField label="Revision (optional)" value={revision} onChange={setRevision} placeholder="e.g. R2" />
+          <TextField
+            label="Revision (optional)"
+            value={rev}
+            onChange={setRevision}
+            placeholder="e.g. R2"
+            hint={base?.revision && revision === null && rev ? `Latest is ${base.revision}` : undefined}
+          />
           {current.length ? (
             <div>
               <Select
                 label="Replaces (older version)"
-                value={files.length > 1 ? "" : replaces}
-                onChange={setReplaces}
+                value={single ? replaces : ""}
+                onChange={(v) => {
+                  setReplaces(v);
+                  setRevision(null);
+                }}
                 options={[{ value: "", label: "Nothing – new document" }, ...current.map((d) => ({ value: d.id, label: `${d.name}${d.revision ? ` (${d.revision})` : ""}` }))]}
               />
-              {files.length > 1 ? <p className="mt-1 text-xs text-slate-500">Upload one file at a time to replace a document.</p> : null}
+              {chosen.length > 1 ? <p className="mt-1 text-xs text-slate-500">Upload one file at a time to replace a document.</p> : null}
             </div>
           ) : null}
         </div>
@@ -287,9 +382,10 @@ function Group({ label, docs, p, isAdmin, canUpload, required, onAdd }: { label:
 /* ---------- section ---------- */
 
 /** Details tab → E. Documents: required-documents checklist, documents grouped by type (Settings → Lists), uploads. */
-export function ProjectDocuments({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
+export function ProjectDocuments({ p, isAdmin, suggestFirst = false, title = "E. Documents" }: { p: Project; isAdmin: boolean; suggestFirst?: boolean; title?: string }) {
   const { data: settings } = useSettings();
   const canUpload = useCanUploadDocuments(p);
+  const uploadTypes = useUploadTypes(p);
   const [uploadType, setUploadType] = useState<string | null>(null);
   const all = useMemo(() => settings?.lists.documentTypes ?? [], [settings]);
   const active = all.filter((t) => !t.archived);
@@ -306,11 +402,11 @@ export function ProjectDocuments({ p, isAdmin }: { p: Project; isAdmin: boolean 
 
   return (
     <Card
-      title="E. Documents"
+      title={title}
       description="Grouped by type. Types and which are required are set by Admin in Settings → Lists → Document types."
       actions={
-        canUpload && active.length ? (
-          <Button onClick={() => setUploadType(active.find((t) => !hasCurrent(t.value) && t.required)?.value ?? active[0].value)}>
+        canUpload && uploadTypes.length ? (
+          <Button onClick={() => setUploadType(uploadTypes.find((t) => !hasCurrent(t.value) && t.required)?.value ?? uploadTypes[0].value)}>
             <Icon icon={Upload} />
             Upload
           </Button>
@@ -343,7 +439,7 @@ export function ProjectDocuments({ p, isAdmin }: { p: Project; isAdmin: boolean 
                 docs={p.documents.filter((d) => d.slot === g.value)}
                 p={p}
                 isAdmin={isAdmin}
-                canUpload={canUpload && active.some((t) => t.value === g.value)}
+                canUpload={canUpload && uploadTypes.some((t) => t.value === g.value)}
                 onAdd={() => setUploadType(g.value)}
               />
             ))}
@@ -352,7 +448,7 @@ export function ProjectDocuments({ p, isAdmin }: { p: Project; isAdmin: boolean 
           <p className="text-sm text-slate-500">No documents yet.</p>
         )}
       </div>
-      {uploadType ? <UploadDialog p={p} types={active} initialType={uploadType} onClose={() => setUploadType(null)} /> : null}
+      {uploadType ? <UploadDialog p={p} types={uploadTypes} initialType={uploadType} suggestFirst={suggestFirst} onClose={() => setUploadType(null)} /> : null}
     </Card>
   );
 }

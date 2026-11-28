@@ -22,6 +22,7 @@ export const ASSIGNABLE_PAGES = [
   { key: "projects", label: "Projects", hint: "Projects the user is on the team of" },
   { key: "factory-dashboard", label: "Factory dashboard", hint: "Pending factory work of all projects, priorities, delays" },
   { key: "site-dashboard", label: "Site dashboard", hint: "Progress, delays, workers and daily updates of all sites" },
+  { key: "design", label: "Design", hint: "Upload drawings and documents to all open projects" },
   { key: "my-tasks", label: "My tasks", hint: "Project tasks assigned to the user" },
   { key: "attendance", label: "Attendance", hint: "Mark factory and office attendance (last 7 days)" },
   { key: "payroll", label: "Payroll", hint: "View payroll, give advances, record salary payments" },

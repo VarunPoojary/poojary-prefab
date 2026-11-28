@@ -1,7 +1,7 @@
 /*
  * The one icon set of the app (lucide), at one stroke. Configs in lib/ stay free of React and refer to icons by key.
  */
-import { Banknote, Building2, CalendarDays, CircleCheck, ClipboardCheck, ClipboardList, Factory, FileText, Handshake, HardHat, Layers, ListChecks, MapPinned, NotebookPen, PencilLine, PencilRuler, Receipt, Settings, TrendingUp, Truck, type LucideIcon, Users, Wallet } from "lucide-react";
+import { Banknote, Building2, CalendarDays, CircleCheck, ClipboardCheck, ClipboardList, DraftingCompass, Factory, FileText, Handshake, HardHat, Layers, ListChecks, MapPinned, NotebookPen, PencilLine, PencilRuler, Receipt, Settings, TrendingUp, Truck, type LucideIcon, Users, Wallet } from "lucide-react";
 import type { EventType, StageKey } from "@/lib/projects/types";
 
 export type { LucideIcon };
@@ -17,6 +17,7 @@ export const NAV_ICONS: Record<string, LucideIcon> = {
   projects: Layers,
   "factory-dashboard": Factory,
   "site-dashboard": MapPinned,
+  design: DraftingCompass,
   "my-tasks": ListChecks,
   attendance: CalendarDays,
   payroll: Wallet,

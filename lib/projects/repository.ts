@@ -60,8 +60,10 @@ export interface ProjectRepository {
   saveTeam(id: string, team: TeamMember[]): Promise<Project>;
   saveContacts(id: string, contacts: ProjectContact[]): Promise<Project>;
   saveParties(id: string, parties: ExternalParty[]): Promise<Project>;
-  /** Admin, or the PM / site engineers on the team (active or on-hold projects). `replaces`: older version of the same type. */
+  /** Admin, or the PM / site engineers on the team, or a role with the Design page (active or on-hold projects). `replaces`: older version of the same type. */
   addDocument(id: string, doc: NewProjectDocument, opts?: { replaces?: string }): Promise<Project>;
+  /** Several uploads in one change: one timeline entry each, one notice to the PM and site engineers. */
+  addDocuments(id: string, items: { doc: NewProjectDocument; replaces?: string }[]): Promise<Project>;
   removeDocument(id: string, docId: string): Promise<Project>;
   /** Fills empty totals of tasks measured in MT with the steel weight. Returns how many were filled. */
   fillSteelTotals(id: string): Promise<number>;

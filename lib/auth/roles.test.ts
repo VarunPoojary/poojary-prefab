@@ -29,7 +29,7 @@ describe("role registry", () => {
       { id: "x", name: "Again", pages: [] },
     ]);
     expect(out[0]).toMatchObject({ id: "admin", name: "Admin", builtIn: true });
-    expect(out[0].pages).toHaveLength(10);
+    expect(out[0].pages).toHaveLength(11);
     expect(out.slice(1)).toEqual([{ id: "x", name: "X", pages: ["projects"] }]);
   });
 

@@ -119,6 +119,9 @@ export class ApiProjectRepository implements ProjectRepository {
   addDocument(id: string, doc: NewProjectDocument, opts: { replaces?: string } = {}) {
     return this.send<Project>("POST", `/projects/${id}/documents`, { ...doc, replaces: opts.replaces });
   }
+  addDocuments(id: string, items: { doc: NewProjectDocument; replaces?: string }[]) {
+    return this.send<Project>("POST", `/projects/${id}/documents/batch`, items.map((i) => ({ ...i.doc, replaces: i.replaces })));
+  }
   removeDocument(id: string, docId: string) {
     return this.send<Project>("DELETE", `/projects/${id}/documents/${docId}`);
   }

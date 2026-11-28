@@ -58,6 +58,13 @@ export const NAV_ITEMS: NavItem[] = [
     status: "ready",
   },
   {
+    key: "design",
+    label: "Design",
+    href: "/design",
+    description: "Upload drawings to open projects",
+    status: "ready",
+  },
+  {
     key: "my-tasks",
     label: "My tasks",
     href: "/my-tasks",

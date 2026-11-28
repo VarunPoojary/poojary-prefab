@@ -138,6 +138,21 @@ export function isSiteManager(p: Pick<Project, "projectManagerId" | "team">, emp
   return p.team.some((m) => m.employeeId === employeeId && m.role === "site" && (!m.from || m.from <= date) && (!m.to || m.to >= date));
 }
 
+/* ---------- documents ---------- */
+
+/**
+ * The revision that follows `current`: R2 → R3, Rev 4 → Rev 5, R09 → R10, A → B. Nothing yet → R0.
+ * Anything it can't step (e.g. "final") → "" so the user types it.
+ */
+export function nextRevision(current?: string | null): string {
+  const r = (current ?? "").trim();
+  if (!r) return "R0";
+  const num = /^(.*?)(\d+)$/.exec(r);
+  if (num) return `${num[1]}${String(Number(num[2]) + 1).padStart(num[2].length, "0")}`;
+  if (/^[A-Ya-y]$/.test(r)) return String.fromCharCode(r.charCodeAt(0) + 1);
+  return "";
+}
+
 /* ---------- forecast ---------- */
 
 /** Expected completion from the actual rate: start + elapsed ÷ progress. Null below 10% or without a start. */

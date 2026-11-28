@@ -262,7 +262,7 @@ export interface DashboardData {
   clientNames: Record<string, string>;
 }
 
-export type DashboardPage = "factory-dashboard" | "site-dashboard";
+export type DashboardPage = "factory-dashboard" | "site-dashboard" | "design";
 
 export interface Delay {
   id: string;
