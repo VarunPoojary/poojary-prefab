@@ -1,3 +1,4 @@
+import { roleHasPage } from "@/lib/auth/roles";
 import type { Role } from "@/lib/auth/types";
 import { BUILDING_TYPES, SCOPES, labelOf } from "@/lib/crm/config";
 import { CrmNotFoundError, ValidationError, type Client, type Enquiry } from "@/lib/crm/types";
@@ -32,6 +33,8 @@ import {
 import { seedProjects } from "./seed";
 import {
   ProjectForbiddenError,
+  type DashboardData,
+  type DashboardPage,
   type Delay,
   type EventListParams,
   type ExternalParty,
@@ -198,6 +201,40 @@ export class LocalProjectRepository implements ProjectRepository {
 
   readAllProjects(): Project[] {
     return clone(this.projects());
+  }
+  readAllUpdates(): ProgressUpdate[] {
+    return clone(this.updates());
+  }
+
+  /* ---------- dashboards ---------- */
+
+  async dashboardData(page: DashboardPage): Promise<DashboardData> {
+    const a = await this.actor();
+    if (!roleHasPage(a.role, page)) throw new ProjectForbiddenError("Your role doesn't include this dashboard.");
+    const projects = this.projects()
+      .filter((p) => p.status === "active" || p.status === "on_hold")
+      .map((p) => ({ ...clone(p), money: null }));
+    const ids = new Set(projects.map((p) => p.id));
+    return {
+      projects,
+      updates: clone(this.updates().filter((u) => ids.has(u.projectId))),
+      delays: clone(this.delays().filter((d) => ids.has(d.projectId))),
+      clientNames: Object.fromEntries(this.o.sources.clients().map((c) => [c.id, c.name])),
+    };
+  }
+
+  async setFactoryPin(id: string, reason: string | null): Promise<Project> {
+    const a = await this.actor();
+    if (!roleHasPage(a.role, "factory-dashboard")) throw new ProjectForbiddenError("Only people with the Factory dashboard can pin projects.");
+    if (reason !== null && !reason.trim()) throw new ValidationError(["Give the reason for putting this project first."]);
+    const list = this.projects();
+    const p = list.find((x) => x.id === id);
+    if (!p) throw new CrmNotFoundError("Project", id);
+    const factoryPin = reason === null ? null : { reason: reason.trim(), at: this.iso(), by: a.id };
+    const next = { ...p, factoryPin, updatedAt: this.iso() };
+    this.saveProjects(list.map((x) => (x.id === id ? next : x)));
+    this.log([this.event(id, a.id, { type: "detail", text: factoryPin ? `Pinned to the top of the factory queue: ${factoryPin.reason}` : "Unpinned from the top of the factory queue" })]);
+    return this.view(next, a);
   }
 
   /** Adds automatic timeline entries written by other modules (attendance). */

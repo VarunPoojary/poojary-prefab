@@ -24,6 +24,8 @@ import {
   type StageKey,
   type TeamMember,
   type Variation,
+  type DashboardData,
+  type DashboardPage,
 } from "./types";
 import type { BudgetGroup } from "./config";
 
@@ -176,6 +178,12 @@ export class ApiProjectRepository implements ProjectRepository {
   }
   recordStageDelay(id: string, stage: StageKey, reason: string, note: string) {
     return this.send<Delay>("POST", `/projects/${id}/stages/${stage}/delays`, { reason, note });
+  }
+  dashboardData(page: DashboardPage) {
+    return this.request<DashboardData>(`/dashboards/${page}`);
+  }
+  setFactoryPin(id: string, reason: string | null) {
+    return this.send<Project>("PUT", `/projects/${id}/factory-pin`, { reason });
   }
   listDelays(id: string) {
     return this.request<Delay[]>(`/projects/${id}/delays`);

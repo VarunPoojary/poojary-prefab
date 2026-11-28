@@ -8,7 +8,7 @@ import { EmptyState, LoadingRows, PageContainer, PageHeader, useDebounced } from
 import { useToast } from "@/components/Providers";
 import { Button } from "@/components/ui/fields";
 import { OptionsMenu } from "@/components/ui/overlays";
-import { ROLE_LABELS } from "@/lib/auth/types";
+import { roleName } from "@/lib/auth/roles";
 import { formatPhone } from "@/lib/crm/rules";
 import { EMPLOYMENT_TYPES } from "@/lib/employees/config";
 import { useEmployees, useLookups, useReactivate } from "@/lib/employees/hooks";
@@ -46,7 +46,7 @@ function downloadCsv(rows: EmployeeSummary[]) {
       r.mobile,
       r.dateOfJoining,
       r.status === "active" ? "Active" : "Inactive",
-      r.login ? `${ROLE_LABELS[r.login.role]}${r.login.enabled ? "" : " (disabled)"}` : "None",
+      r.login ? `${roleName(r.login.role)}${r.login.enabled ? "" : " (disabled)"}` : "None",
     ]
       .map(cell)
       .join(","),

@@ -1,4 +1,6 @@
 import type {
+  DashboardData,
+  DashboardPage,
   Delay,
   EventListParams,
   ExternalParty,
@@ -86,6 +88,10 @@ export interface ProjectRepository {
   listUpdates(id: string, taskId?: string): Promise<ProgressUpdate[]>;
   recordStageDelay(id: string, stage: StageKey, reason: string, note: string): Promise<Delay>;
   listDelays(id: string): Promise<Delay[]>;
+  /** Active and on-hold projects with their updates and delays, no money. Needs the dashboard page in the role. */
+  dashboardData(page: DashboardPage): Promise<DashboardData>;
+  /** Pins a project to the top of the Factory dashboard (reason required) or unpins it (null). */
+  setFactoryPin(id: string, reason: string | null): Promise<Project>;
 
   /* timeline */
   events(id: string, params?: EventListParams): Promise<{ items: ProjectEvent[]; hasMore: boolean }>;

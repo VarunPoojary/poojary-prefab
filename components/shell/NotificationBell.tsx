@@ -18,6 +18,7 @@ const ICONS: Record<NotificationKind, LucideIcon> = {
   milestone_overdue: Banknote,
   enquiry_reopened: AlertTriangle,
   attendance_due: CalendarDays,
+  progress_due: ClipboardCheck,
   expense_requested: Receipt,
   expense_decided: ReceiptText,
   budget_alert: ChartColumn,

@@ -1,12 +1,13 @@
-import type { Role, User } from "./auth/types";
+import { ADMIN_ROLE, roleHasPage, type PageKey } from "./auth/roles";
+import type { User } from "./auth/types";
 
 export interface NavItem {
   key: string;
   label: string;
   href: string;
   description: string;
-  /** Roles allowed to see the item; omit for everyone. */
-  roles?: Role[];
+  /** Only the Admin role sees it (Employees, Settings). Other items follow each role’s pages in Settings. */
+  adminOnly?: boolean;
   /** Also shown to Staff assigned as factory / office attendance supervisors. */
   supervisors?: boolean;
   status: "ready" | "soon";
@@ -19,7 +20,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Enquiries",
     href: "/enquiries",
     description: "Track every enquiry to a win or loss",
-    roles: ["admin", "staff"],
     status: "ready",
   },
   {
@@ -27,7 +27,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Clients",
     href: "/clients",
     description: "Client list and contact persons",
-    roles: ["admin", "staff"],
     status: "ready",
   },
   {
@@ -35,7 +34,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Quotation Maker",
     href: "/quotations",
     description: "Create, edit and download quotations",
-    roles: ["admin", "staff"],
     status: "ready",
   },
   {
@@ -43,7 +41,20 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Projects",
     href: "/projects",
     description: "Won orders from design to handover",
-    roles: ["admin", "staff"],
+    status: "ready",
+  },
+  {
+    key: "factory-dashboard",
+    label: "Factory dashboard",
+    href: "/factory",
+    description: "Pending factory work and priorities",
+    status: "ready",
+  },
+  {
+    key: "site-dashboard",
+    label: "Site dashboard",
+    href: "/sites",
+    description: "Progress and daily updates of all sites",
     status: "ready",
   },
   {
@@ -51,7 +62,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "My tasks",
     href: "/my-tasks",
     description: "Project tasks assigned to you",
-    roles: ["admin", "staff"],
     status: "ready",
   },
   {
@@ -59,7 +69,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Attendance",
     href: "/attendance",
     description: "Daily attendance of all employees",
-    roles: ["admin"],
     supervisors: true,
     status: "ready",
   },
@@ -68,7 +77,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Payroll",
     href: "/payroll",
     description: "Salaries, advances and payments",
-    roles: ["admin", "accountant"],
     status: "ready",
   },
   {
@@ -76,7 +84,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Expenses",
     href: "/expenses",
     description: "Project expenses: approve and pay",
-    roles: ["admin", "accountant"],
     status: "ready",
   },
   {
@@ -84,15 +91,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Employees",
     href: "/employees",
     description: "Employee records and logins",
-    roles: ["admin"],
+    adminOnly: true,
     status: "ready",
   },
   {
     key: "settings",
     label: "Settings",
     href: "/settings",
-    description: "Project task templates and lists",
-    roles: ["admin"],
+    description: "Roles and access, templates and lists",
+    adminOnly: true,
     status: "ready",
   },
 ];
@@ -102,14 +109,17 @@ export interface AccessContext {
   supervisor?: boolean;
 }
 
-export function canAccess(user: Pick<User, "role"> | null, item: Pick<NavItem, "roles" | "supervisors">, ctx: AccessContext = {}): boolean {
-  return !!user && (!item.roles || item.roles.includes(user.role) || (!!item.supervisors && !!ctx.supervisor));
+export function canAccess(user: Pick<User, "role"> | null, item: Pick<NavItem, "key" | "adminOnly" | "supervisors">, ctx: AccessContext = {}): boolean {
+  if (!user) return false;
+  if (user.role === ADMIN_ROLE) return true;
+  if (item.adminOnly) return false;
+  return roleHasPage(user.role, item.key as PageKey) || (!!item.supervisors && !!ctx.supervisor);
 }
 
-/** Pages outside the menu rules: the Accountant may open an employee's Payroll tab. */
+/** Pages outside the menu rules: a role with Payroll may open an employee's Payroll tab. */
 export function canAccessPath(user: Pick<User, "role"> | null, pathname: string, ctx: AccessContext = {}): boolean {
   if (!user) return false;
-  if (user.role === "accountant" && /^\/employees\/[^/]+\/payroll\/?$/.test(pathname)) return true;
+  if (user.role !== ADMIN_ROLE && roleHasPage(user.role, "payroll") && /^\/employees\/[^/]+\/payroll\/?$/.test(pathname)) return true;
   const item = activeNavItem(pathname);
   return !item || canAccess(user, item, ctx);
 }

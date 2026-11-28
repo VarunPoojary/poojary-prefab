@@ -1,4 +1,5 @@
 import { ValidationError } from "@/lib/crm/types";
+import { ADMIN_ROLE, normaliseRoles, PAGE_KEYS, roleIdFor, type RoleDef } from "@/lib/auth/roles";
 import type { Role } from "@/lib/auth/types";
 import { ProjectForbiddenError, type ListItem, type StageKey, type TemplateTask } from "@/lib/projects/types";
 import { SettingsStore } from "./store";
@@ -36,6 +37,8 @@ export class LocalSettingsRepository implements SettingsRepository {
   constructor(
     private readonly store: SettingsStore,
     private readonly getRole: () => Promise<Role | null>,
+    /** Role ids currently given to a login (a role in use can't be deleted). */
+    private readonly rolesInUse: () => Map<string, number> = () => new Map(),
   ) {}
 
   private async admin() {
@@ -93,6 +96,38 @@ export class LocalSettingsRepository implements SettingsRepository {
     if (p.startMonth && !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.startMonth)) throw new ValidationError(["Choose the first payroll month."]);
     const s = this.store.read();
     const next = { ...s, payroll: { startMonth: p.startMonth }, updatedAt: new Date().toISOString() };
+    this.store.write(next);
+    return next;
+  }
+
+  async saveRoles(roles: RoleDef[]): Promise<AppSettings> {
+    await this.admin();
+    const issues: string[] = [];
+    const names = new Set<string>();
+    const ids = new Set<string>([ADMIN_ROLE]);
+    const clean: RoleDef[] = [];
+    for (const r of roles) {
+      if (r.id === ADMIN_ROLE) continue; // Admin is built in and never changes.
+      const name = r.name.trim().replace(/\s+/g, " ");
+      if (!name) {
+        issues.push("Every role needs a name.");
+        continue;
+      }
+      if (name.toLowerCase() === "admin" || names.has(name.toLowerCase())) issues.push(`There is already a role called “${name}”.`);
+      names.add(name.toLowerCase());
+      const id = r.id && !ids.has(r.id) ? r.id : roleIdFor(name, ids);
+      ids.add(id);
+      clean.push({ id, name, pages: PAGE_KEYS.filter((k) => r.pages.includes(k)) });
+    }
+    const s = this.store.read();
+    const kept = new Set(clean.map((r) => r.id));
+    for (const [id, count] of this.rolesInUse()) {
+      if (id === ADMIN_ROLE || kept.has(id)) continue;
+      const was = s.roles.find((r) => r.id === id)?.name ?? id;
+      issues.push(`“${was}” is still given to ${count} login${count === 1 ? "" : "s"}. Change their role on the employee page first.`);
+    }
+    if (issues.length) throw new ValidationError([...new Set(issues)]);
+    const next = { ...s, roles: normaliseRoles([{ id: ADMIN_ROLE, name: "Admin", pages: [] }, ...clean]), updatedAt: new Date().toISOString() };
     this.store.write(next);
     return next;
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { ROLE_LABELS, type Role } from "@/lib/auth/types";
+import type { Role } from "@/lib/auth/types";
+import { useRoles } from "@/lib/settings/hooks";
 import { Lock } from "lucide-react";
 import { Icon } from "@/components/ui/icons";
 
@@ -17,6 +18,7 @@ export function StatusPill({ status }: { status: "active" | "inactive" }) {
 }
 
 export function LoginBadge({ login }: { login: { role: Role; enabled: boolean } | null }) {
+  const roles = useRoles();
   if (!login) return <span className="text-xs text-slate-400">None</span>;
   return (
     <span
@@ -26,7 +28,7 @@ export function LoginBadge({ login }: { login: { role: Role; enabled: boolean } 
       }`}
     >
       {!login.enabled ? <span aria-label="disabled"><Icon icon={Lock} size={14} className="mr-1 inline-block align-[-2px]" /></span> : null}
-      {ROLE_LABELS[login.role]}
+      {roles.name(login.role)}
     </span>
   );
 }

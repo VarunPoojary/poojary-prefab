@@ -11,4 +11,5 @@ import { SupabaseAuthService } from "./supabase-service";
 export const authService: AuthService = cloudEnabled ? new SupabaseAuthService() : new MockAuthService();
 
 export * from "./types";
+export * from "./roles";
 export type { AuthService } from "./service";

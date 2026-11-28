@@ -11,6 +11,7 @@ import type { ListItem, Measure, StageKey, TemplateTask } from "@/lib/projects/t
 import { useUsers } from "@/lib/crm/hooks";
 import { useSaveAttendanceSettings, useSaveList, useSavePayrollSettings, useSaveTemplates, useSettings } from "@/lib/settings/hooks";
 import type { AttendanceSettings, PayrollSettings } from "@/lib/settings/types";
+import { RolesEditor } from "./RolesEditor";
 
 const issuesOf = (e: unknown) => (e && typeof e === "object" && "issues" in e ? (e as { issues: string[] }).issues : [e instanceof Error ? e.message : String(e)]);
 const input = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100";
@@ -246,13 +247,14 @@ function PayrollSettingsEditor({ initial }: { initial: PayrollSettings }) {
 /** Admin settings: project task templates and the dropdown lists used across projects. */
 export function SettingsScreen() {
   const { data, isPending } = useSettings();
-  const [tab, setTab] = useState<"templates" | "lists" | "attendance" | "payroll">("templates");
+  const [tab, setTab] = useState<"roles" | "templates" | "lists" | "attendance" | "payroll">("roles");
   return (
     <PageContainer wide>
-      <PageHeader title="Settings" subtitle="Changes apply to new data only; existing projects keep what they have." />
-      <div className="mb-4 flex flex-wrap gap-2" role="tablist">
+      <PageHeader title="Settings" subtitle="Roles, task templates, lists, attendance and payroll. Template and list changes apply to new data only." />
+      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0" role="tablist">
         {(
           [
+            ["roles", "Roles and access"],
             ["templates", "Project task templates"],
             ["lists", "Lists"],
             ["attendance", "Attendance"],
@@ -265,7 +267,7 @@ export function SettingsScreen() {
             role="tab"
             aria-selected={tab === k}
             onClick={() => setTab(k)}
-            className={`rounded-lg px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
+            className={`h-9 shrink-0 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors ${tab === k ? "bg-red-900 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50"}`}
           >
             {l}
           </button>
@@ -273,6 +275,8 @@ export function SettingsScreen() {
       </div>
       {isPending || !data ? (
         <p className="text-sm text-slate-500">Loading…</p>
+      ) : tab === "roles" ? (
+        <RolesEditor key={data.updatedAt} initial={data.roles} />
       ) : tab === "payroll" ? (
         <PayrollSettingsEditor key={data.updatedAt} initial={data.payroll} />
       ) : tab === "attendance" ? (

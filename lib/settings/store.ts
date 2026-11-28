@@ -1,6 +1,7 @@
 import { DEFAULT_LISTS, DEFAULT_TEMPLATES, type ListKey } from "@/lib/projects/config";
 import { appStorage, type KeyValueStorage } from "@/lib/storage";
 import { DEFAULT_REMINDER_TIME } from "@/lib/attendance/config";
+import { normaliseRoles } from "@/lib/auth/roles";
 import type { AppSettings } from "./types";
 
 export const SETTINGS_KEY = "pppl.settings.v1";
@@ -11,6 +12,7 @@ export const defaultSettings = (): AppSettings => ({
   // Demo supervisors (Rahul at the factory, Vaishali at the office); admins change them in Settings.
   attendance: { reminderTime: DEFAULT_REMINDER_TIME, supervisors: { factory: ["u_rahul"], office: ["u_staff"] } },
   payroll: { startMonth: "" },
+  roles: normaliseRoles(),
   updatedAt: new Date(0).toISOString(),
 });
 
@@ -30,6 +32,8 @@ export class SettingsStore {
         lists: { ...d.lists, ...s.lists } as Record<ListKey, AppSettings["lists"][ListKey]>,
         attendance: { ...d.attendance, ...s.attendance, supervisors: { ...d.attendance.supervisors, ...s.attendance?.supervisors } },
         payroll: { ...d.payroll, ...s.payroll },
+        // Settings saved before custom roles get the starting roles (Admin, Staff, Accountant).
+        roles: normaliseRoles(s.roles),
         updatedAt: s.updatedAt ?? d.updatedAt,
       };
     } catch {

@@ -1,4 +1,5 @@
-import { ROLE_LABELS, type Role } from "@/lib/auth/types";
+import { roleExists, roleName } from "@/lib/auth/roles";
+import type { Role } from "@/lib/auth/types";
 import { hashPassword } from "@/lib/auth/crypto";
 import { normalizePhone } from "@/lib/crm/rules";
 import { CrmNotFoundError, ValidationError } from "@/lib/crm/types";
@@ -458,6 +459,7 @@ export class LocalEmployeeRepository implements EmployeeRepository {
     const actor = await this.admin();
     const e = this.find(this.people.employees(), employeeId);
     if (e.status !== "active") throw new ValidationError(["Reactivate the employee before creating a login."]);
+    if (!roleExists(opts.role)) throw new ValidationError(["Choose a role from Settings → Roles and access."]);
     const logins = this.people.logins();
     if (logins.some((l) => l.employeeId === employeeId)) throw new ValidationError(["This employee already has a login."]);
     const username = opts.username.trim();
@@ -481,7 +483,7 @@ export class LocalEmployeeRepository implements EmployeeRepository {
       createdAt: this.iso(),
     };
     this.saveLogin(login);
-    this.logEmployee(employeeId, actor.id, { type: "login_created", comment: `Username ${username}, role ${ROLE_LABELS[opts.role]}` });
+    this.logEmployee(employeeId, actor.id, { type: "login_created", comment: `Username ${username}, role ${roleName(opts.role)}` });
     return { login: stripHash(login), temporaryPassword };
   }
 
@@ -512,13 +514,14 @@ export class LocalEmployeeRepository implements EmployeeRepository {
     const actor = await this.admin();
     const l = this.findLogin(employeeId);
     if (l.role === role) return stripHash(l);
+    if (!roleExists(role)) throw new ValidationError(["Choose a role from Settings → Roles and access."]);
     if (l.role === "admin") this.guardAdminAccess(employeeId, "demoted");
     const updated = { ...l, role };
     this.saveLogin(updated);
     this.logEmployee(employeeId, actor.id, {
       type: "login_role",
-      from: ROLE_LABELS[l.role],
-      to: ROLE_LABELS[role],
+      from: roleName(l.role),
+      to: roleName(role),
     });
     return stripHash(updated);
   }

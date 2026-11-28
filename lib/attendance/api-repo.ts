@@ -4,6 +4,7 @@ import { ProjectForbiddenError } from "@/lib/projects/types";
 import type { AttendanceRepository, ProjectAttendanceAccess } from "./repository";
 import {
   AttendanceConflictError,
+  type DashboardAttendance,
   type AttendanceRecord,
   type CasualDayRow,
   type CasualWorker,
@@ -108,6 +109,9 @@ export class ApiAttendanceRepository implements AttendanceRepository {
   }
   casualDay(date: string) {
     return this.request<CasualDayRow[]>(`/attendance/day/${date}/casual`);
+  }
+  dashboardAttendance(from: string, to: string) {
+    return this.request<DashboardAttendance>(`/attendance/dashboard?${this.qs({ from, to })}`);
   }
   sitesNotLogged(date: string) {
     return this.request<{ projectId: string; code: string; name: string }[]>(`/attendance/day/${date}/sites-not-logged`);

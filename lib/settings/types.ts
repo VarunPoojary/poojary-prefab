@@ -1,3 +1,4 @@
+import type { RoleDef } from "@/lib/auth/roles";
 import type { ListKey } from "@/lib/projects/config";
 import type { ListItem, StageKey, TemplateTask } from "@/lib/projects/types";
 
@@ -19,6 +20,8 @@ export interface AppSettings {
   lists: Record<ListKey, ListItem[]>;
   attendance: AttendanceSettings;
   payroll: PayrollSettings;
+  /** Login roles and the pages each may open (Admin first, always complete). See lib/auth/roles. */
+  roles: RoleDef[];
   updatedAt: string;
 }
 
@@ -33,5 +36,7 @@ export interface SettingsRepository {
   saveAttendance(s: AttendanceSettings): Promise<AppSettings>;
   /** Admin only. */
   savePayroll(s: PayrollSettings): Promise<AppSettings>;
+  /** Admin only. Admin can't change; a role still assigned to a login can't be deleted. */
+  saveRoles(roles: RoleDef[]): Promise<AppSettings>;
   resetDemoData?(): Promise<void>;
 }

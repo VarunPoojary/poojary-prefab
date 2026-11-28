@@ -1,6 +1,7 @@
 import type { AppNotification } from "@/lib/notifications/types";
 import type {
   AttendanceRecord,
+  DashboardAttendance,
   CasualDayRow,
   CasualWorker,
   Conflict,
@@ -61,6 +62,8 @@ export interface AttendanceRepository {
   markDayHoliday(date: string): Promise<number>;
   casualDay(date: string): Promise<CasualDayRow[]>;
   sitesNotLogged(date: string): Promise<{ projectId: string; code: string; name: string }[]>;
+  /** For the Factory / Site dashboards (role needs one of them). No rates or remarks. */
+  dashboardAttendance(from: string, to: string): Promise<DashboardAttendance>;
   register(month: string): Promise<RegisterRow[]>;
 
   /* casual workers register */

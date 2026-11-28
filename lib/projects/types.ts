@@ -190,6 +190,8 @@ export interface Project {
   stages: Stage[];
   /** Site attendance: logged daily with reminders while enabled. Older records may not have it (see attendanceOf). */
   attendance?: ProjectAttendanceSettings;
+  /** Pinned to the top of the Factory dashboard queue, with the reason (e.g. client escalation). */
+  factoryPin?: StatusReason | null;
   createdAt: string;
   createdBy: string;
   updatedAt: string;
@@ -232,6 +234,17 @@ export interface ProjectEvent {
   audience?: "managers";
   editedAt?: string;
 }
+
+/** Cross-project data for the Factory / Site dashboards. Money is always null. */
+export interface DashboardData {
+  projects: Project[];
+  updates: ProgressUpdate[];
+  delays: Delay[];
+  /** Client id → company name. */
+  clientNames: Record<string, string>;
+}
+
+export type DashboardPage = "factory-dashboard" | "site-dashboard";
 
 export interface Delay {
   id: string;

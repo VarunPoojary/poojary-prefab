@@ -122,8 +122,8 @@ describe("LocalPayrollRepository", () => {
   it("lets only Admins and the Accountant open payroll", async () => {
     const { repo, actor, prev } = setup();
     actor.current = { id: "u_priya", role: "staff" };
-    await expect(repo.employeeMonth("u_priya", prev)).rejects.toThrow(/Only admins and the accountant/);
-    await expect(repo.companyMonth(prev)).rejects.toThrow(/Only admins and the accountant/);
+    await expect(repo.employeeMonth("u_priya", prev)).rejects.toThrow(/doesn.t include the Payroll page/);
+    await expect(repo.companyMonth(prev)).rejects.toThrow(/doesn.t include the Payroll page/);
   });
 
   it("seeds a settled last month with one employee open and reminds from the 3rd", async () => {

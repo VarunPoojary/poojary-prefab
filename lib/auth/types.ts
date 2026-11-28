@@ -1,6 +1,5 @@
-export type Role = "admin" | "staff" | "accountant";
-
-export const ROLE_LABELS: Record<Role, string> = { admin: "Admin", staff: "Staff", accountant: "Accountant" };
+/** A role id: "admin" (built in) or a role defined in Settings → Roles and access. See lib/auth/roles. */
+export type Role = string;
 
 /** The signed-in person: an employee with a login. */
 export interface User {

@@ -8,6 +8,7 @@ import { ReasonDialog, issuesOf } from "@/components/expenses/bits";
 import { useToast } from "@/components/Providers";
 import { Button, Card } from "@/components/ui/fields";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { ADMIN_ROLE, roleHasPage } from "@/lib/auth/roles";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { payrollRepo } from "@/lib/payroll";
 import { monthLabel, monthOf, type DayKind, type DayRow } from "@/lib/payroll/calc";
@@ -428,7 +429,8 @@ function AccountantFrame({ id }: { id: string }) {
 export function EmployeePayrollTab() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  if (user?.role === "accountant") return <AccountantFrame id={id} />;
+  // Roles with the Payroll page (not Admin) can’t open the rest of the employee record, so they get a payroll-only frame.
+  if (user && user.role !== ADMIN_ROLE && roleHasPage(user.role, "payroll")) return <AccountantFrame id={id} />;
   return <EmployeeFrame active="payroll">{(e) => <PayrollPanel employeeId={e.id} />}</EmployeeFrame>;
 }
 

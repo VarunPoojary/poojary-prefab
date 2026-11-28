@@ -6,14 +6,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { COMPANY } from "@/config/company";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { ROLE_LABELS } from "@/lib/auth";
 import { DEFAULT_ROUTE, activeNavItem, canAccessPath, homeFor, visibleNavItems } from "@/lib/navigation";
 import { flushPendingSave, useQuotationStore } from "@/lib/store";
 import { fileStore } from "@/lib/files";
 import { migrateInlineFiles } from "@/lib/files/migrate";
 import { appStorage } from "@/lib/storage";
 import { cloudEnabled } from "@/lib/supabase/config";
-import { useSettings } from "@/lib/settings/hooks";
+import { useRoles, useSettings } from "@/lib/settings/hooks";
 import { Icon, NAV_ICONS } from "@/components/ui/icons";
 import { ChevronDown, LogOut, Menu, UserRound, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
@@ -44,6 +43,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const active = activeNavItem(pathname);
   const supervisor = useIsSupervisor();
+  const roles = useRoles();
 
   const qc = useQueryClient();
   // Files saved inline by earlier versions move to the browser file store once (browser storage only).
@@ -123,7 +123,7 @@ export function AppShellClient({ children }: { children: React.ReactNode }) {
         ) : null}
         <div className="ml-auto flex items-center gap-1">
           <NotificationBell />
-          <UserMenu name={user.name} username={user.username} role={ROLE_LABELS[user.role]} onLogout={() => void signOut()} />
+          <UserMenu name={user.name} username={user.username} role={roles.name(user.role)} onLogout={() => void signOut()} />
         </div>
       </header>
 
@@ -210,6 +210,7 @@ function Drawer({
   const { user } = useAuth();
   const panelRef = useRef<HTMLDivElement>(null);
   const supervisor = useIsSupervisor();
+  const roles = useRoles();
   const items = visibleNavItems(user, { supervisor });
 
   useEffect(() => {
@@ -314,7 +315,7 @@ function Drawer({
         <div className="flex items-center gap-3 border-t border-slate-200 p-3 pl-4">
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-medium text-slate-900">{user?.name}</div>
-            <div className="text-xs text-slate-500">{user ? ROLE_LABELS[user.role] : ""}</div>
+            <div className="text-xs text-slate-500">{user ? roles.name(user.role) : ""}</div>
           </div>
           <button
             type="button"
