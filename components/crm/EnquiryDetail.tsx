@@ -1,5 +1,7 @@
 "use client";
 
+import { Layers, Paperclip, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { FileLink } from "@/components/files/Files";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { useProjects } from "@/lib/projects/hooks";
@@ -104,7 +106,7 @@ export function EnquiryDetail() {
                 aria-label="Enquiry status"
                 value={e.status}
                 onChange={(ev) => setStatusTo(ev.target.value as EnquiryStatus)}
-                className="rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm font-medium"
+                className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm font-medium"
               >
                 {STATUSES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -135,7 +137,7 @@ export function EnquiryDetail() {
           className="mb-3 flex items-center justify-between rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 hover:bg-sky-100"
         >
           <span>
-            🏗️ Project <b>{project.code}</b> · {project.name} · {Math.round(project.progress)}% complete
+            <Icon icon={Layers} size={14} className="mr-1 inline-block align-[-2px]" />Project <b>{project.code}</b> · {project.name} · {Math.round(project.progress)}% complete
           </span>
           <span className="font-medium">Open project →</span>
         </Link>
@@ -168,7 +170,7 @@ export function EnquiryDetail() {
         </div>
       ) : null}
 
-      <div className="grid gap-5 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div className="space-y-5">
           <Card title="Client & contact">
             <Link href={`/clients/${client.id}`} className="font-semibold text-slate-900 hover:underline">
@@ -210,7 +212,7 @@ export function EnquiryDetail() {
             {e.description ? <p className="mt-3 whitespace-pre-line text-sm text-slate-700">{e.description}</p> : null}
             <div className="mt-4 border-t border-slate-100 pt-3">
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Notes</span>
+                <span className="text-xs font-semibold text-slate-500">Notes</span>
                 {editingNotes === null ? (
                   <button type="button" className="text-xs font-medium text-red-700 hover:underline" onClick={() => setEditingNotes(e.notes)}>
                     Edit
@@ -256,11 +258,11 @@ export function EnquiryDetail() {
                 {e.attachments.map((a) => (
                   <li key={a.id} className="flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1">
-                      📎 <FileLink file={a} /> <span className="shrink-0 text-xs text-slate-500">({formatBytes(a.size)})</span>
+                      <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={a} /> <span className="shrink-0 text-xs text-slate-500">({formatBytes(a.size)})</span>
                     </span>
                     {!closed ? (
                       <Button size="sm" variant="danger" onClick={() => removeAtt.mutate({ id: e.id, attachmentId: a.id })}>
-                        ✕
+                        <Icon icon={X} size={16} />
                       </Button>
                     ) : null}
                   </li>
@@ -296,7 +298,7 @@ export function EnquiryDetail() {
               <LoadingRows rows={2} />
             ) : linked.length ? (
               <table className="w-full text-sm">
-                <thead className="text-left text-xs uppercase text-slate-500">
+                <thead className="text-left text-xs text-slate-500">
                   <tr>
                     <th className="py-1.5">Rev</th>
                     <th className="py-1.5">Offer</th>
@@ -315,7 +317,7 @@ export function EnquiryDetail() {
                           {q.offerNo} / {q.revision}
                         </Link>
                         {e.finalised?.quotationId === q.id ? (
-                          <span className="ml-2 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-emerald-800">
+                          <span className="ml-2 rounded-lg bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800">
                             Accepted
                           </span>
                         ) : null}
@@ -349,7 +351,7 @@ export function EnquiryDetail() {
               </p>
             )}
             {latest && !closed && (e.status === "quotation_created" || e.status === "revision_created") ? (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-violet-50 px-3 py-2 text-sm text-violet-900">
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-900">
                 <span>Sent R{latest.enquiryRevision} to the client?</span>
                 <Button size="sm" onClick={() => setStatusTo(latest.enquiryRevision ? "revision_sent" : "quotation_sent")}>
                   Mark as {latest.enquiryRevision ? "Revision" : "Quotation"} Sent
@@ -457,7 +459,7 @@ function Timeline({
           />
           <div className="flex flex-wrap items-center gap-1.5 text-sm text-slate-900">{text(ev)}</div>
           {ev.comment && ev.type !== "edited" && !ev.type.startsWith("attachment") ? (
-            <p className="mt-1 whitespace-pre-line rounded-md bg-slate-50 px-3 py-2 text-sm text-slate-700">{ev.comment}</p>
+            <p className="mt-1 whitespace-pre-line rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">{ev.comment}</p>
           ) : null}
           <div className="mt-0.5 text-xs text-slate-500">
             {userName(ev.userId)} · {formatDateTime(ev.at)}
@@ -505,16 +507,16 @@ export function CreateQuotationMenu({ enquiryId, open, onClose }: { enquiryId: s
           </div>
         </button>
       ) : null}
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <div className="mb-2 text-xs font-semibold text-slate-500">
         {latest ? "Or start fresh" : "Start from"} (linked as R{nextR})
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {presetsFor.map((p) => (
           <button
             key={p.key}
             type="button"
             onClick={() => router.push(`/quotations/new?from=${p.key}&enquiry=${enquiryId}`)}
-            className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-red-400 hover:bg-red-50/40"
+            className="rounded-xl border border-slate-200 p-4 text-left transition-colors hover:border-red-400 hover:bg-slate-50"
           >
             <div className="text-sm font-semibold text-slate-900">{p.label}</div>
             <div className="mt-1 text-xs text-slate-500">{p.description}</div>
@@ -586,7 +588,7 @@ function LinkQuotationDialog({
                   type="button"
                   disabled={link.isPending}
                   onClick={() => doLink(s)}
-                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-red-50/40"
+                  className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-slate-50"
                 >
                   <span className="w-16 font-semibold text-slate-900">
                     {s.offerNo}/{s.revision}
@@ -595,7 +597,7 @@ function LinkQuotationDialog({
                     <span className="block truncate text-slate-900">{s.client || <i>No client</i>}</span>
                     <span className="block truncate text-xs text-slate-500">{s.subject}</span>
                   </span>
-                  {!sameClient ? <span className="text-[10px] font-semibold uppercase text-amber-700">Other client</span> : null}
+                  {!sameClient ? <span className="text-[11px] font-semibold text-amber-700">Other client</span> : null}
                   <QuoteStatus status={s.status} sentAt={s.sentAt} />
                   <span className="w-28 text-right tabular-nums">{formatRupee(s.grandTotal)}</span>
                 </button>
@@ -606,7 +608,7 @@ function LinkQuotationDialog({
       )}
       <p className="mt-3 text-xs text-slate-500">
         The quotation becomes R{enquiry.nextRevision}. If it is already Final, the status moves to{" "}
-        {enquiry.nextRevision === 0 ? "Quotation Created" : "Revision Created"}.
+        {enquiry.nextRevision === 0 ? "Quotation created" : "Revision created"}.
       </p>
     </Modal>
   );

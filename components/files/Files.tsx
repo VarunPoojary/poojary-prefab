@@ -1,5 +1,7 @@
 "use client";
 
+import { Camera, Download, Image as ImageIcon, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/components/Providers";
 import { fileBlob, openFile, uploadPhoto, type FileSource, type PhotoRef } from "@/lib/files";
@@ -39,8 +41,8 @@ export function FileLink({ file, className = "", children }: { file: FileSource;
       <button type="button" onClick={() => void run(true)} className="min-w-0 truncate text-left text-slate-800 hover:underline">
         {children ?? file.name}
       </button>
-      <button type="button" aria-label={`Download ${file.name}`} title="Download" onClick={() => void run(false)} className="shrink-0 rounded px-1 text-xs text-slate-500 hover:bg-slate-100">
-        ⬇
+      <button type="button" aria-label={`Download ${file.name}`} title="Download" onClick={() => void run(false)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900">
+        <Icon icon={Download} size={14} />
       </button>
     </span>
   );
@@ -54,13 +56,13 @@ function Thumb({ photo, onOpen, onRemove }: { photo: PhotoRef; onOpen: () => voi
         type="button"
         onClick={onOpen}
         title={`${photo.name}${photo.takenAt ? ` · taken ${formatDateTime(photo.takenAt)}` : ""}`}
-        className="block h-16 w-16 overflow-hidden rounded-md border border-slate-200 bg-slate-100"
+        className="block h-16 w-16 overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
       >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={url} alt={photo.name} className="h-full w-full object-cover" />
         ) : (
-          <span className="flex h-full items-center justify-center text-lg">🖼️</span>
+          <span className="flex h-full items-center justify-center text-slate-400"><Icon icon={ImageIcon} size={18} /></span>
         )}
       </button>
       {onRemove ? (
@@ -68,9 +70,9 @@ function Thumb({ photo, onOpen, onRemove }: { photo: PhotoRef; onOpen: () => voi
           type="button"
           aria-label={`Remove ${photo.name}`}
           onClick={onRemove}
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[10px] text-white"
+          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-white ring-2 ring-white"
         >
-          ✕
+          <Icon icon={X} size={12} />
         </button>
       ) : null}
     </div>
@@ -112,7 +114,7 @@ function Lightbox({ photo, onClose }: { photo: PhotoRef; onClose: () => void }) 
         {photo.name} · {formatBytes(photo.size)}
         {photo.takenAt ? ` · taken ${formatDateTime(photo.takenAt)}` : ""} · uploaded {formatDateTime(photo.uploadedAt)}
       </p>
-      <button type="button" className="mt-3 rounded-md bg-white/15 px-4 py-2 text-sm text-white" onClick={onClose}>
+      <button type="button" className="mt-3 rounded-lg bg-white/15 px-4 py-2 text-sm text-white" onClick={onClose}>
         Close
       </button>
     </div>
@@ -123,7 +125,7 @@ function Lightbox({ photo, onClose }: { photo: PhotoRef; onClose: () => void }) 
 export function PhotoPicker({
   photos,
   onChange,
-  label = "📷 Add photos",
+  label = "Add photos",
   max = 10,
   capture = false,
   onAdded,
@@ -175,8 +177,9 @@ export function PhotoPicker({
           type="button"
           disabled={busy}
           onClick={() => ref.current?.click()}
-          className="rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-60"
         >
+          <Icon icon={Camera} className="text-slate-500" />
           {busy ? "Saving photos…" : label}
         </button>
       ) : null}

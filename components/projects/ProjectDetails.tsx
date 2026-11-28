@@ -26,6 +26,8 @@ import { useExpenseBudget } from "@/lib/expenses/hooks";
 import { formatPaise } from "@/lib/paise";
 import { useEmployeeLabourCost } from "@/lib/payroll/hooks";
 import { Timeline } from "./Timeline";
+import { FileText, MapPin, Plus, TriangleAlert, Upload, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 const rupee = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
 const issuesOf = (e: unknown) => (e && typeof e === "object" && "issues" in e ? (e as { issues: string[] }).issues : [e instanceof Error ? e.message : String(e)]);
@@ -95,7 +97,7 @@ function InfoDialog({ project, onClose }: { project: Project; onClose: () => voi
         </>
       }
     >
-      <div className="grid max-h-[65vh] gap-4 overflow-y-auto sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField className="sm:col-span-2" label="Project name" required value={f.name} onChange={(v) => set({ name: v })} />
         <TextField label="Site location" value={f.siteLocation} onChange={(v) => set({ siteLocation: v })} placeholder="City, state" />
         <Select
@@ -110,7 +112,7 @@ function InfoDialog({ project, onClose }: { project: Project; onClose: () => voi
           <NumberField label="Longitude" value={f.lng} onChange={(v) => set({ lng: v })} />
           <div className="col-span-2 flex items-end sm:col-span-1">
             <Button onClick={locate} disabled={locating}>
-              📍 {locating ? "Locating…" : "Use my current location"}
+              <Icon icon={MapPin} size={14} className="mr-1 inline-block align-[-2px]" />{locating ? "Locating…" : "Use my current location"}
             </Button>
           </div>
         </div>
@@ -225,7 +227,7 @@ function InfoSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
               rel="noreferrer"
               className="mt-1 block text-xs font-medium text-red-700 hover:underline"
             >
-              📍 {p.lat}, {p.lng} – Open in Google Maps
+              <Icon icon={MapPin} size={14} className="mr-1 inline-block align-[-2px]" />{p.lat}, {p.lng} – Open in Google Maps
             </a>
           ) : null}
         </InfoRow>
@@ -412,7 +414,7 @@ function PeopleSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
             <li key={m.id} className={`flex flex-wrap items-center justify-between gap-2 py-2 ${left ? "text-slate-400" : ""}`}>
               <span>
                 <span className="font-medium">{userName(m.employeeId)}</span> <span className="text-xs">· {roles.label(m.role)}</span>
-                {m.employeeId === p.projectManagerId ? <span className="ml-1 rounded bg-red-50 px-1.5 text-[10px] font-semibold text-red-800">PM</span> : null}
+                {m.employeeId === p.projectManagerId ? <span className="ml-1 rounded bg-red-50 px-1.5 text-[11px] font-semibold text-red-800">PM</span> : null}
               </span>
               <span className="text-xs">
                 {m.from ? formatDate(m.from) : "–"} → {m.to ? formatDate(m.to) : "now"} {left ? "(left the team)" : ""}
@@ -486,7 +488,7 @@ function PeopleSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
 function MoneyTile({ label, value, tone }: { label: string; value: string; tone?: "red" | "green" }) {
   return (
     <div className="rounded-lg bg-slate-50 px-3 py-2">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[11px] font-semibold text-slate-500">{label}</div>
       <div className={`text-sm font-semibold ${tone === "red" ? "text-red-700" : tone === "green" ? "text-emerald-700" : "text-slate-900"}`}>{value}</div>
     </div>
   );
@@ -539,7 +541,7 @@ function MoneySection({ p }: { p: Project }) {
         Variations
         {editable ? (
           <Button size="sm" onClick={() => setDialog("variation")}>
-            + Add variation
+            <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add variation
           </Button>
         ) : null}
       </h4>
@@ -555,8 +557,8 @@ function MoneySection({ p }: { p: Project }) {
                 {v.amount > 0 ? "+" : "−"}
                 {rupee(Math.abs(v.amount))}
                 {editable ? (
-                  <button type="button" aria-label="Remove variation" className="text-slate-400 hover:text-red-700" onClick={() => window.confirm("Remove this variation?") && removeVariation.mutate(v.id)}>
-                    ✕
+                  <button type="button" aria-label="Remove variation" className="-my-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700" onClick={() => window.confirm("Remove this variation?") && removeVariation.mutate(v.id)}>
+                    <Icon icon={X} size={16} />
                   </button>
                 ) : null}
               </span>
@@ -577,8 +579,8 @@ function MoneySection({ p }: { p: Project }) {
       </h4>
       {m.milestones.length ? (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm" data-testid="milestones">
-            <thead className="text-left text-xs uppercase text-slate-500">
+          <table className="stack-table stack-flush w-full min-w-[520px] text-sm" data-testid="milestones">
+            <thead className="text-left text-xs text-slate-500">
               <tr>
                 <th className="py-1">Milestone</th>
                 <th className="text-right">%</th>
@@ -594,12 +596,12 @@ function MoneySection({ p }: { p: Project }) {
                 const overdue = t.overdue.some((x) => x.id === ms.id);
                 return (
                   <tr key={ms.id}>
-                    <td className="py-1.5">{ms.name}</td>
-                    <td className="text-right">{ms.pct ?? ""}</td>
-                    <td className="text-right">{rupee(ms.amount)}</td>
-                    <td className="pl-3">{ms.expectedDate ? formatDate(ms.expectedDate) : <span className="text-slate-400">–</span>}</td>
-                    <td className="text-right">{rupee(got)}</td>
-                    <td className="pl-3 text-xs font-semibold">
+                    <td className="py-1.5 max-md:font-medium">{ms.name}</td>
+                    <td data-half data-label="Share %" className="text-right">{ms.pct ?? ""}</td>
+                    <td data-half data-label="Amount" className="text-right">{rupee(ms.amount)}</td>
+                    <td data-half data-label="Expected" className="pl-3">{ms.expectedDate ? formatDate(ms.expectedDate) : <span className="text-slate-400">–</span>}</td>
+                    <td data-half data-label="Received" className="text-right">{rupee(got)}</td>
+                    <td data-menu className="pl-3 text-xs font-semibold">
                       {got >= ms.amount ? (
                         <span className="text-emerald-700">Received</span>
                       ) : overdue ? (
@@ -623,7 +625,7 @@ function MoneySection({ p }: { p: Project }) {
       <h4 className="mb-1 mt-5 flex items-center justify-between text-sm font-semibold text-slate-800">
         Payments received
         <Button size="sm" variant="primary" onClick={() => setDialog("payment")}>
-          + Record payment
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Record payment
         </Button>
       </h4>
       {m.payments.length ? (
@@ -636,13 +638,13 @@ function MoneySection({ p }: { p: Project }) {
                   <span className="text-xs text-slate-500">{formatDate(x.date)}</span> {labelOf(PAYMENT_MODES, x.mode)}
                   {x.reference ? ` · ${x.reference}` : ""}
                   {x.milestoneId ? <span className="text-xs text-slate-500"> · {msName(x.milestoneId)}</span> : null}
-                  <span className="block text-[11px] text-slate-400">recorded by {userName(x.createdBy)}</span>
+                  <span className="block text-xs text-slate-500">recorded by {userName(x.createdBy)}</span>
                 </span>
                 <span className="flex items-center gap-2 whitespace-nowrap font-semibold text-emerald-700">
                   {rupee(x.amount)}
                   {user?.role === "admin" ? (
-                    <button type="button" aria-label="Remove payment" className="font-normal text-slate-400 hover:text-red-700" onClick={() => window.confirm("Remove this payment?") && removePayment.mutate(x.id)}>
-                      ✕
+                    <button type="button" aria-label="Remove payment" className="-my-1.5 flex h-8 w-8 items-center justify-center rounded-lg font-normal text-slate-400 transition-colors hover:bg-red-50 hover:text-red-700" onClick={() => window.confirm("Remove this payment?") && removePayment.mutate(x.id)}>
+                      <Icon icon={X} size={16} />
                     </button>
                   ) : null}
                 </span>
@@ -652,7 +654,7 @@ function MoneySection({ p }: { p: Project }) {
       ) : (
         <p className="text-xs text-slate-500">No payments recorded yet.</p>
       )}
-      {t.overdue.length ? <p className="mt-2 text-sm font-medium text-red-700">⚠️ {t.overdue.length} milestone{t.overdue.length === 1 ? "" : "s"} overdue.</p> : null}
+      {t.overdue.length ? <p className="mt-2 text-sm font-medium text-red-700"><Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />{t.overdue.length} milestone{t.overdue.length === 1 ? "" : "s"} overdue.</p> : null}
 
       <h4 className="mb-1 mt-5 flex items-center justify-between text-sm font-semibold text-slate-800">
         Budget (planned cost)
@@ -664,7 +666,7 @@ function MoneySection({ p }: { p: Project }) {
       </h4>
       <div className="overflow-x-auto">
         <table className="w-full text-sm" data-testid="budget">
-          <thead className="text-left text-xs uppercase text-slate-500">
+          <thead className="text-left text-xs text-slate-500">
             <tr>
               <th className="py-1">Work stage</th>
               <th className="text-right">Budget</th>
@@ -880,7 +882,7 @@ function PaymentDialog({ p, onClose }: { p: Project; onClose: () => void }) {
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextField label="Date" required type="date" value={f.date} onChange={(date) => setF({ ...f, date })} />
         <NumberField label="Amount (₹)" required value={f.amount} onChange={(amount) => setF({ ...f, amount })} />
         <Select label="Mode" value={f.mode} onChange={(mode) => setF({ ...f, mode })} options={PAYMENT_MODES} />
@@ -916,15 +918,16 @@ function DocumentsSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
       actions={
         isAdmin ? (
           <div className="flex flex-wrap items-end gap-2">
-            <select aria-label="Document type" value={slot} onChange={(e) => setSlot(e.target.value as ProjectDocSlot)} className="rounded-md border border-slate-300 px-2 py-1.5 text-sm">
+            <select aria-label="Document type" value={slot} onChange={(e) => setSlot(e.target.value as ProjectDocSlot)} className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm">
               {PROJECT_DOC_SLOTS.map((s) => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>
               ))}
             </select>
-            <label className={`cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50 ${busy ? "opacity-60" : ""}`}>
-              {busy ? "Uploading…" : "⬆ Upload"}
+            <label className={`cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium hover:bg-slate-50 ${busy ? "opacity-60" : ""}`}>
+              <Icon icon={Upload} size={16} />
+            {busy ? "Uploading…" : "Upload"}
               <input
                 type="file"
                 multiple
@@ -958,7 +961,7 @@ function DocumentsSection({ p, isAdmin }: { p: Project; isAdmin: boolean }) {
               <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="min-w-0">
                   <span className="flex items-center gap-1 font-medium">
-                    📄 <FileLink file={d} />
+                    <Icon icon={FileText} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={d} />
                   </span>
                   <span className="block text-xs text-slate-500">
                     {labelOf(PROJECT_DOC_SLOTS, d.slot)} · {formatBytes(d.size)} · {formatDate(d.uploadedAt)} by {userName(d.uploadedBy)}
@@ -992,7 +995,7 @@ export function ProjectDetails({ p }: { p: Project }) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   return (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div className="space-y-4">
         <InfoSection p={p} isAdmin={isAdmin} />
         <ClientSection p={p} isAdmin={isAdmin} />

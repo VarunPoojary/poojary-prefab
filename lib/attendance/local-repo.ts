@@ -1,3 +1,4 @@
+import { ADMIN_ROLE, roleHasPage } from "@/lib/auth/roles";
 import type { Role } from "@/lib/auth/types";
 import { CrmNotFoundError, ValidationError } from "@/lib/crm/types";
 import { activeAdminIds } from "@/lib/employees/rules";
@@ -35,6 +36,7 @@ import { seedAttendance } from "./seed";
 import {
   AttendanceConflictError,
   type AttendanceRecord,
+  type DashboardAttendance,
   type AttendanceSource,
   type AttendanceStatus,
   type CasualDayRow,
@@ -82,7 +84,7 @@ export interface LocalAttendanceOptions {
   storage?: () => KeyValueStorage;
   people: PeopleStore;
   settings: SettingsStore;
-  projects: Pick<LocalProjectRepository, "readAllProjects" | "appendEvents">;
+  projects: Pick<LocalProjectRepository, "readAllProjects" | "readAllUpdates" | "appendEvents">;
   notifications: NotificationStore;
   getActor: () => Promise<Actor | null>;
   latencyMs?: number;
@@ -189,6 +191,8 @@ export class LocalAttendanceRepository implements AttendanceRepository {
     return p;
   }
   private supervises(a: Actor): WorkLocation[] {
+    // A role with the Attendance page marks factory and office attendance like a supervisor of both.
+    if (a.role !== ADMIN_ROLE && roleHasPage(a.role, "attendance")) return ["factory", "office"];
     const s = this.o.settings.read().attendance.supervisors;
     return (["factory", "office"] as const).filter((l) => s[l].includes(a.id));
   }
@@ -510,7 +514,7 @@ export class LocalAttendanceRepository implements AttendanceRepository {
   private async sheetActor(): Promise<{ a: Actor; supervises: WorkLocation[] }> {
     const a = await this.actor();
     const supervises = this.supervises(a);
-    if (a.role !== "admin" && !supervises.length) throw new ProjectForbiddenError("Only admins and factory / office supervisors can open the Attendance page.");
+    if (a.role !== "admin" && !supervises.length) throw new ProjectForbiddenError("Only admins, roles with the Attendance page and factory / office supervisors can open the Attendance page.");
     return { a, supervises };
   }
 
@@ -656,6 +660,23 @@ export class LocalAttendanceRepository implements AttendanceRepository {
   }
   private isDayDone(projectId: string, date: string) {
     return this.isCompanyHoliday(date) || this.siteDays().some((d) => d.projectId === projectId && d.date === date);
+  }
+
+  async dashboardAttendance(from: string, to: string): Promise<DashboardAttendance> {
+    const a = await this.actor();
+    if (!roleHasPage(a.role, "factory-dashboard") && !roleHasPage(a.role, "site-dashboard"))
+      throw new ProjectForbiddenError("Your role doesn't include a dashboard.");
+    const inRange = (d: string) => d >= from && d <= to;
+    return {
+      records: this.records()
+        .filter((r) => inRange(r.date))
+        .map((r) => ({ personKind: r.personKind, personId: r.personId, date: r.date, status: r.status, location: r.location, projectId: r.projectId })),
+      siteDays: this.siteDays()
+        .filter((d) => inRange(d.date))
+        .map((d) => ({ projectId: d.projectId, date: d.date, holiday: d.holiday, loggedBy: d.loggedBy, loggedAt: d.loggedAt })),
+      holidays: this.holidays().map((h) => h.date).filter(inRange),
+      reminderTime: this.o.settings.read().attendance.reminderTime,
+    };
   }
 
   async sitesNotLogged(date: string) {
@@ -822,12 +843,16 @@ export class LocalAttendanceRepository implements AttendanceRepository {
   async reconcileReminders(): Promise<AppNotification[]> {
     const defaultTime = this.o.settings.read().attendance.reminderTime;
     const projects = this.loggableProjects();
-    const due = remindersDue(
-      projects.map((p) => ({ id: p.id, from: [attendanceOf(p).enabledFrom, p.startDate].sort().pop()!, reminderTime: attendanceOf(p).reminderTime || defaultTime })),
-      (id, date) => this.isDayDone(id, date),
-      this.now(),
-    );
-    if (!due.length) return [];
+    const schedule = projects.map((p) => ({ id: p.id, from: [attendanceOf(p).enabledFrom, p.startDate].sort().pop()!, reminderTime: attendanceOf(p).reminderTime || defaultTime }));
+    const due = remindersDue(schedule, (id, date) => this.isDayDone(id, date), this.now());
+    // Same timing for progress: a site day needs at least one progress update (holidays excepted).
+    const updates = this.o.projects.readAllUpdates();
+    const progressDone = (id: string, date: string) =>
+      this.isCompanyHoliday(date) ||
+      this.siteDays().some((d) => d.projectId === id && d.date === date && d.holiday) ||
+      updates.some((u) => u.projectId === id && u.workDate === date);
+    const progressDue = remindersDue(schedule, progressDone, this.now());
+    if (!due.length && !progressDue.length) return [];
     const admins = activeAdminIds(this.o.people.logins(), this.employees());
     const byId = new Map(projects.map((p) => [p.id, p]));
     const items: NewNotification[] = [];
@@ -843,6 +868,20 @@ export class LocalAttendanceRepository implements AttendanceRepository {
           body: p.name,
           href: `/projects/${p.id}/attendance?log=${d.date}`,
           key: `attendance:${p.id}:${d.date}:${d.level}`,
+        });
+    }
+    for (const d of progressDue) {
+      const p = byId.get(d.projectId)!;
+      const managers = [...new Set([p.projectManagerId, ...p.team.filter((m) => m.role === "site").map((m) => m.employeeId)])].filter((id) => this.isSiteManager(p, id, d.date));
+      const recipients = d.level === 2 ? [...new Set([...managers, ...admins])] : managers;
+      for (const userId of recipients)
+        items.push({
+          userId,
+          kind: "progress_due",
+          title: d.level === 1 ? `${p.code}: post progress for ${dayLabel(d.date)}` : `${p.code}: no progress posted for ${dayLabel(d.date)}`,
+          body: p.name,
+          href: `/projects/${p.id}/progress`,
+          key: `progress:${p.id}:${d.date}:${d.level}`,
         });
     }
     return this.o.notifications.push(items);

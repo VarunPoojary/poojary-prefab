@@ -4,6 +4,8 @@ import { useState } from "react";
 import { ErrorList } from "@/components/crm/ui";
 import { Button } from "@/components/ui/fields";
 import { Modal } from "@/components/ui/overlays";
+import { X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 export interface Column<T> {
   key: keyof T & string;
@@ -15,7 +17,7 @@ export interface Column<T> {
   readOnly?: boolean;
 }
 
-const cell = "w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100";
+const cell = "w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100";
 
 /** Dialog to edit a list of rows (team, contacts, parties, milestones…). Rows stack as cards on phones. */
 export function RowsDialog<T extends { id: string }>({
@@ -79,8 +81,8 @@ export function RowsDialog<T extends { id: string }>({
       }
     >
       {description ? <p className="mb-3 text-sm text-slate-600">{description}</p> : null}
-      <div className="max-h-[60vh] space-y-2 overflow-y-auto">
-        <div className="hidden gap-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:flex">
+      <div className="space-y-2">
+        <div className="hidden gap-2 px-1 text-[11px] font-semibold text-slate-500 sm:flex">
           {columns.map((c) => (
             <span key={c.key} className={c.width ?? "flex-1"}>
               {c.label}
@@ -95,7 +97,7 @@ export function RowsDialog<T extends { id: string }>({
               const common = { "aria-label": `${c.label} ${i + 1}`, className: cell };
               return (
                 <label key={c.key} className={`${c.width ?? "flex-1"} min-w-0`}>
-                  <span className="mb-0.5 block text-[11px] font-semibold uppercase text-slate-500 sm:hidden">{c.label}</span>
+                  <span className="mb-0.5 block text-[11px] font-semibold text-slate-500 sm:hidden">{c.label}</span>
                   {c.readOnly ? (
                     <span className="block py-1.5 text-sm text-slate-800">{String(v ?? "")}</span>
                   ) : c.type === "select" ? (
@@ -121,7 +123,7 @@ export function RowsDialog<T extends { id: string }>({
               );
             })}
             {blank ? <button type="button" aria-label={`Remove row ${i + 1}`} onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))} className="w-8 self-end rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-700 sm:self-auto">
-              ✕
+              <Icon icon={X} size={16} />
             </button> : null}
           </div>
         ))}

@@ -7,7 +7,7 @@ import type { AttendanceRecord, AttendanceStatus, RecordPatch, WorkLocation } fr
 import { formatDateTime } from "@/lib/format";
 import { AttendanceBadge } from "./bits";
 
-const sel = "rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm disabled:bg-slate-50";
+const sel = "h-10 min-w-0 rounded-lg border border-slate-300 bg-white pl-2.5 text-sm disabled:bg-slate-50 md:h-9";
 
 export interface ProjectOption {
   id: string;
@@ -67,7 +67,8 @@ export function RecordEditor({
   const needsLocation = (status === "present" || status === "half") && !location;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    // Phones: status and location side by side, project on its own row. Wider: one wrapping row.
+    <div className="grid grid-cols-2 gap-1.5 md:flex md:flex-wrap md:items-center">
       <select
         aria-label={`Status of ${label}`}
         value={status}
@@ -97,7 +98,7 @@ export function RecordEditor({
         ))}
       </select>
       {location === "site" ? (
-        <select aria-label={`Project of ${label}`} value={projectId} disabled={saving} onChange={(e) => tryCommit({ status, location: "site", projectId: e.target.value })} className={`${sel} max-w-[12rem] ${!projectId ? "border-amber-400 ring-2 ring-amber-100" : ""}`}>
+        <select aria-label={`Project of ${label}`} value={projectId} disabled={saving} onChange={(e) => tryCommit({ status, location: "site", projectId: e.target.value })} className={`${sel} col-span-2 md:max-w-[12rem] ${!projectId ? "border-amber-400 ring-2 ring-amber-100" : ""}`}>
           <option value="">Choose project…</option>
           {projects.map((p) => (
             <option key={p.id} value={p.id}>
@@ -121,8 +122,8 @@ export function HistoryNote({ record }: { record: AttendanceRecord | null }) {
       .join(", ");
   return (
     <details className="relative inline-block">
-      <summary className="cursor-pointer list-none text-[11px] font-semibold text-slate-500 hover:text-slate-800 [&::-webkit-details-marker]:hidden">edited {record.history.length}×</summary>
-      <div className="absolute right-0 z-20 mt-1 w-72 rounded-lg border border-slate-200 bg-white p-3 text-xs shadow-lg">
+      <summary className="cursor-pointer list-none py-1 text-xs font-medium text-slate-500 hover:text-slate-800 [&::-webkit-details-marker]:hidden">edited {record.history.length}×</summary>
+      <div className="absolute left-0 z-20 mt-1 w-[min(18rem,calc(100vw-3rem))] rounded-xl border border-slate-200 bg-white p-3 text-xs shadow-lg md:left-auto md:right-0">
         <ul className="space-y-1.5">
           {[...record.history].reverse().map((h, i) => (
             <li key={i}>

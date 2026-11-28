@@ -8,6 +8,7 @@ import { ReasonDialog, issuesOf } from "@/components/expenses/bits";
 import { useToast } from "@/components/Providers";
 import { Button, Card } from "@/components/ui/fields";
 import { useAuth } from "@/lib/auth/AuthProvider";
+import { ADMIN_ROLE, roleHasPage } from "@/lib/auth/roles";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { payrollRepo } from "@/lib/payroll";
 import { monthLabel, monthOf, type DayKind, type DayRow } from "@/lib/payroll/calc";
@@ -18,6 +19,8 @@ import { formatPaise } from "@/lib/paise";
 import { todayIso } from "@/lib/projects/rules";
 import { AdvanceDialog, CloseMonthDialog, EditPaymentDialog, MonthBadge, MonthPicker, PayDialog, rupee, rupeeExact } from "./dialogs";
 import { downloadSalarySlip } from "./SalarySlip";
+import { Check, Download, TriangleAlert, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 const KIND: Record<DayKind, { label: string; short: string; cls: string }> = {
   present: { label: "Present", short: "P", cls: "bg-emerald-100 text-emerald-800" },
@@ -35,7 +38,7 @@ function Line({ label, value, strong, children, testId }: { label: string; value
     <span className={`flex items-baseline justify-between gap-3 py-1.5 ${strong ? "font-semibold text-slate-900" : "text-slate-700"}`}>
       <span>
         {label}
-        {children ? <span className="ml-1 text-[10px] text-slate-400">ⓘ</span> : null}
+        {children ? <span className="ml-1 text-[11px] text-slate-400">ⓘ</span> : null}
       </span>
       <span className="text-right tabular-nums" data-testid={testId}>
         {value}
@@ -46,7 +49,7 @@ function Line({ label, value, strong, children, testId }: { label: string; value
   return (
     <details className="border-b border-slate-100 text-sm">
       <summary className="cursor-pointer list-none [&::-webkit-details-marker]:hidden">{body}</summary>
-      <div className="mb-2 rounded-md bg-slate-50 p-2 text-xs text-slate-700">{children}</div>
+      <div className="mb-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-700">{children}</div>
     </details>
   );
 }
@@ -117,19 +120,20 @@ function MonthCard({ v, isAdmin }: { v: EmployeeMonthView; isAdmin: boolean }) {
                   .finally(() => setSlipBusy(false));
               }}
             >
-              {slipBusy ? "Preparing…" : "⬇ Salary slip"}
+              <Icon icon={Download} size={16} />
+            {slipBusy ? "Preparing…" : "Salary slip"}
             </Button>
           ) : null}
         </>
       }
     >
       {notLoggedPast ? (
-        <p role="alert" className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-800" data-testid="not-logged-warning">
-          ⚠️ {notLoggedPast} past day{notLoggedPast === 1 ? " is" : "s are"} Not logged. The estimate doesn&apos;t deduct them, and the month can&apos;t be closed until every day has a status.
+        <p role="alert" className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" data-testid="not-logged-warning">
+          <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />{notLoggedPast} past day{notLoggedPast === 1 ? " is" : "s are"} Not logged. The estimate doesn&apos;t deduct them, and the month can&apos;t be closed until every day has a status.
         </p>
       ) : null}
       {closed && v.pendingAdjustmentPaise ? (
-        <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900" data-testid="pending-adjustment">
+        <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" data-testid="pending-adjustment">
           Attendance changed after closing: {formatPaise(v.pendingAdjustmentPaise, { sign: true })} ({v.pendingAdjustmentPaise > 0 ? "arrears" : "recovery"}). It will be added to the next month that is closed.
         </p>
       ) : null}
@@ -206,8 +210,11 @@ function MonthCard({ v, isAdmin }: { v: EmployeeMonthView; isAdmin: boolean }) {
       {v.checks.length ? (
         <ul className="mt-3 space-y-0.5 text-xs" data-testid="checks">
           {v.checks.map((ch) => (
-            <li key={ch.label} className={ch.ok ? "text-emerald-700" : "text-red-700"}>
-              {ch.ok ? "✓" : "✗"} {ch.label}: {ch.detail}
+            <li key={ch.label} className={`flex items-start gap-1.5 ${ch.ok ? "text-emerald-700" : "text-red-700"}`}>
+              <Icon icon={ch.ok ? Check : X} size={14} className="mt-px" />
+              <span>
+                {ch.label}: {ch.detail}
+              </span>
             </li>
           ))}
         </ul>
@@ -260,8 +267,8 @@ function YearCard({ employeeId, onPick }: { employeeId: string; onPick: (m: stri
         <p className="text-sm text-slate-500">No payroll months in {year}.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" data-testid="year-view">
-            <thead className="text-left text-xs uppercase text-slate-500">
+          <table className="stack-table w-full text-sm stack-flush" data-testid="year-view">
+            <thead className="text-left text-xs text-slate-500">
               <tr>
                 <th className="py-1">Month</th>
                 <th className="text-right">Gross</th>
@@ -279,12 +286,12 @@ function YearCard({ employeeId, onPick }: { employeeId: string; onPick: (m: stri
                     {monthLabel(r.month)}
                     {r.estimate ? <span className="ml-1 text-xs text-slate-400">(estimate)</span> : null}
                   </td>
-                  <td className="text-right tabular-nums">{rupee(r.grossPaise)}</td>
-                  <td className="text-right tabular-nums">{rupee(r.recoveryPaise)}</td>
-                  <td className="text-right tabular-nums">{rupee(r.netPaise)}</td>
-                  <td className="text-right tabular-nums">{rupee(r.paidPaise)}</td>
-                  <td className="text-right tabular-nums">{rupee(r.balancePaise)}</td>
-                  <td className="text-right">
+                  <td data-half data-label="Gross" className="text-right tabular-nums">{rupee(r.grossPaise)}</td>
+                  <td data-half data-label="Advance recovered" className="text-right tabular-nums">{rupee(r.recoveryPaise)}</td>
+                  <td data-half data-label="Net payable" className="text-right tabular-nums">{rupee(r.netPaise)}</td>
+                  <td data-half data-label="Paid" className="text-right tabular-nums">{rupee(r.paidPaise)}</td>
+                  <td data-half data-label="Balance" className="text-right tabular-nums">{rupee(r.balancePaise)}</td>
+                  <td data-menu className="text-right">
                     <MonthBadge status={r.status} />
                   </td>
                 </tr>
@@ -312,8 +319,8 @@ function PaymentsCard({ employeeId, isAdmin, outstanding }: { employeeId: string
         <p className="text-sm text-slate-500">No payments yet.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-sm" data-testid="payments">
-            <thead className="text-left text-xs uppercase text-slate-500">
+          <table className="stack-table w-full min-w-[760px] text-sm stack-flush" data-testid="payments">
+            <thead className="text-left text-xs text-slate-500">
               <tr>
                 <th className="py-1">Date</th>
                 <th>Type</th>
@@ -328,31 +335,31 @@ function PaymentsCard({ employeeId, isAdmin, outstanding }: { employeeId: string
             <tbody className="divide-y divide-slate-100">
               {payments.map((p) => (
                 <tr key={p.id} data-testid="payment-row" className={p.deleted ? "text-slate-400 line-through" : ""}>
-                  <td className="py-1.5">{formatDate(p.date)}</td>
-                  <td>{payTypeLabel(p.type)}</td>
-                  <td>{monthLabel(p.forMonth)}</td>
-                  <td className="text-right tabular-nums">{rupeeExact(p.amountPaise)}</td>
-                  <td>
+                  <td className="py-1.5 max-md:font-medium">{formatDate(p.date)}</td>
+                  <td data-half data-label="Type">{payTypeLabel(p.type)}</td>
+                  <td data-half data-label="For month">{monthLabel(p.forMonth)}</td>
+                  <td data-half data-label="Amount" className="text-right tabular-nums">{rupeeExact(p.amountPaise)}</td>
+                  <td data-half data-label="Mode">
                     {payModeLabel(p.mode)}
                     {p.reference ? ` · ${p.reference}` : ""}
                   </td>
-                  <td>{userName(p.by)}</td>
-                  <td className="max-w-[14rem] text-xs">
+                  <td data-half data-label="Paid by">{userName(p.by)}</td>
+                  <td data-label="Remarks" className="max-w-[14rem] text-xs">
                     {p.remarks}
                     {p.history.length ? <span className="block text-slate-500 no-underline">edited {p.history.length}× – {p.history[p.history.length - 1].reason}</span> : null}
                     {p.deleted ? <span className="block text-red-700">Deleted: {p.deleted.reason}</span> : null}
                   </td>
                   {isAdmin ? (
-                    <td className="whitespace-nowrap text-right">
+                    <td data-menu className="whitespace-nowrap text-right">
                       {!p.deleted ? (
-                        <>
-                          <button type="button" className="px-1 text-xs text-slate-600 hover:underline" onClick={() => setEditing(p)}>
+                        <span className="inline-flex gap-1">
+                          <button type="button" className="h-8 rounded-lg px-2 text-xs text-slate-600 transition-colors hover:bg-slate-100 md:h-auto md:px-1 md:hover:bg-transparent md:hover:underline" onClick={() => setEditing(p)}>
                             Edit
                           </button>
-                          <button type="button" className="px-1 text-xs text-red-700 hover:underline" onClick={() => setDeleting(p)}>
+                          <button type="button" className="h-8 rounded-lg px-2 text-xs text-red-700 transition-colors hover:bg-red-50 md:h-auto md:px-1 md:hover:bg-transparent md:hover:underline" onClick={() => setDeleting(p)}>
                             Delete
                           </button>
-                        </>
+                        </span>
                       ) : null}
                     </td>
                   ) : null}
@@ -422,7 +429,8 @@ function AccountantFrame({ id }: { id: string }) {
 export function EmployeePayrollTab() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  if (user?.role === "accountant") return <AccountantFrame id={id} />;
+  // Roles with the Payroll page (not Admin) can’t open the rest of the employee record, so they get a payroll-only frame.
+  if (user && user.role !== ADMIN_ROLE && roleHasPage(user.role, "payroll")) return <AccountantFrame id={id} />;
   return <EmployeeFrame active="payroll">{(e) => <PayrollPanel employeeId={e.id} />}</EmployeeFrame>;
 }
 

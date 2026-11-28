@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useRef, useState } from "react";
 import { Button, Card, NumberField, RowActions, TextArea, TextField, Toggle, move } from "@/components/ui/fields";
 import { COMPANY } from "@/config/company";
@@ -58,21 +60,21 @@ export function AnnexuresStep() {
         actions={
           a.shedEnabled ? (
             <Button variant="primary" onClick={() => update((d) => void d.annexures.shedRows.push(emptyShedRow()))}>
-              + Add row
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add row
             </Button>
           ) : null
         }
       >
         {a.shedEnabled ? (
           <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TextField label="Intro line" value={a.shedIntro} onChange={(v) => update((d) => void (d.annexures.shedIntro = v))} />
               <TextField label="Table title" value={a.shedTitle} onChange={(v) => update((d) => void (d.annexures.shedTitle = v))} />
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[820px] text-sm">
+              <table className="stack-table stack-flush w-full min-w-[820px] text-sm max-md:divide-y max-md:divide-slate-100">
                 <thead>
-                  <tr className="text-left text-xs uppercase text-slate-500">
+                  <tr className="text-left text-xs text-slate-500">
                     <th className="w-8 py-2">#</th>
                     <th className="py-2">Item / description</th>
                     <th className="w-20 py-2">Qty</th>
@@ -88,33 +90,33 @@ export function AnnexuresStep() {
                     const set = (fn: (x: typeof r) => void) => update((d) => fn(d.annexures.shedRows[i]));
                     return (
                       <tr key={r.id} className="border-t border-slate-100 align-top">
-                        <td className="py-2 text-slate-500">{i + 1}</td>
-                        <td className="py-2 pr-2">
+                        <td data-index className="py-2 text-slate-500">{i + 1}</td>
+                        <td data-label="Item / description" className="py-2 pr-2">
                           <TextField value={r.description} onChange={(v) => set((x) => void (x.description = v))} />
                         </td>
-                        <td className="py-2 pr-2">
+                        <td data-half data-label="Qty" className="py-2 pr-2">
                           <NumberField value={r.qty} onChange={(v) => set((x) => void (x.qty = v))} />
                         </td>
-                        <td className="py-2 pr-2">
+                        <td data-half data-label="Unit" className="py-2 pr-2">
                           <TextField value={r.qtyUnit} onChange={(v) => set((x) => void (x.qtyUnit = v))} />
                         </td>
-                        <td className="py-2 pr-2">
+                        <td data-half data-label="L (m)" className="py-2 pr-2">
                           <NumberField value={r.length} onChange={(v) => set((x) => void (x.length = v))} />
                         </td>
-                        <td className="py-2 pr-2">
+                        <td data-half data-label="W (m)" className="py-2 pr-2">
                           <NumberField value={r.width} onChange={(v) => set((x) => void (x.width = v))} />
                         </td>
-                        <td className="py-2 pr-2">
+                        <td data-label="Area SQM" className="py-2 pr-2">
                           <NumberField
                             value={r.areaOverride}
                             placeholder={formatINR(shedArea({ ...r, areaOverride: null })) || "auto"}
                             onChange={(v) => set((x) => void (x.areaOverride = v))}
                           />
-                          <div className="mt-1 text-[10px] text-slate-500">
+                          <div className="mt-1 text-xs text-slate-500">
                             {r.areaOverride === null ? "auto: qty × L × W" : "manual"} {shedSize(r) && `· ${shedSize(r)}`}
                           </div>
                         </td>
-                        <td className="py-2 pl-1">
+                        <td data-menu className="py-2 pl-1">
                           <RowActions
                             index={i}
                             count={a.shedRows.length}
@@ -173,7 +175,7 @@ export function AnnexuresStep() {
                 Add standard photos
               </Button>
               <Button variant="primary" onClick={() => fileRef.current?.click()}>
-                + Upload photos
+                <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Upload photos
               </Button>
             </>
           ) : null
@@ -183,7 +185,7 @@ export function AnnexuresStep() {
           <div className="space-y-4">
             <TextField label="Title" value={a.photosTitle} onChange={(v) => update((d) => void (d.annexures.photosTitle = v))} />
             {uploadError ? <p className="text-sm text-red-700">{uploadError}</p> : null}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {a.photos.map((p, i) => (
                 <div key={p.id} className="rounded-lg border border-slate-200 p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

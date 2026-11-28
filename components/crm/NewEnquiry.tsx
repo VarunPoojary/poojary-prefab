@@ -1,5 +1,7 @@
 "use client";
 
+import { Check, Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useToast } from "@/components/Providers";
@@ -31,7 +33,7 @@ function Steps({ step }: { step: 1 | 2 }) {
                 active ? "bg-red-700 text-white" : done ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"
               }`}
             >
-              {done ? "✓" : n}
+              {done ? <Icon icon={Check} size={14} /> : n}
             </span>
             <span className={active ? "font-semibold text-slate-900" : "text-slate-500"}>{s}</span>
             {n === 1 ? <span className="mx-1 text-slate-300">—</span> : null}
@@ -126,7 +128,7 @@ export function NewEnquiry() {
                       type="button"
                       data-testid="client-result"
                       onClick={() => setClientId(c.id)}
-                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-red-50/40"
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50"
                     >
                       <span>
                         <span className="block font-medium text-slate-900">{c.name}</span>
@@ -134,7 +136,7 @@ export function NewEnquiry() {
                           {[p?.name, p?.phone ? formatPhone(p.phone) : "", p?.email, c.city].filter(Boolean).join(" · ")}
                         </span>
                       </span>
-                      <span className="text-xs font-medium text-red-700">Select →</span>
+                      <span className="shrink-0 whitespace-nowrap text-xs font-medium text-red-700">Select →</span>
                     </button>
                   </li>
                 );
@@ -147,7 +149,7 @@ export function NewEnquiry() {
             <div className="mt-4 flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3 text-sm">
               <span className="text-slate-600">Not in the list?</span>
               <Button variant="primary" onClick={() => setCreating(true)}>
-                + Create new client
+                <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Create new client
               </Button>
             </div>
           </Card>
@@ -158,7 +160,7 @@ export function NewEnquiry() {
         <>
           <div className="mb-5 flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
             <div>
-              <div className="text-xs uppercase text-slate-500">Client</div>
+              <div className="text-xs text-slate-500">Client</div>
               <div className="font-semibold text-slate-900">{client.name}</div>
               <div className="text-xs text-slate-500">{[client.city, client.state].filter(Boolean).join(", ")}</div>
             </div>

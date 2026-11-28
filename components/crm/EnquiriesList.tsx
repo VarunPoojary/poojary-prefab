@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Plus, Search } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/fields";
@@ -12,6 +14,9 @@ import { formatRupee } from "@/lib/money";
 import { CreateQuotationMenu } from "./EnquiryDetail";
 import { StatusDialog } from "./StatusDialog";
 import { EmptyState, LoadingRows, PageContainer, PageHeader, StatusBadge, useDebounced, useUserName } from "./ui";
+
+/** Shared size of every filter control: one 40px row height. */
+const control = "h-10 rounded-lg border border-slate-300 bg-white";
 
 export function EnquiriesList() {
   const router = useRouter();
@@ -72,7 +77,7 @@ export function EnquiriesList() {
       data-testid={testId}
       aria-pressed={active}
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition ${
+      className={`flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-medium transition-colors sm:h-8 ${
         active ? "border-red-700 bg-red-50 text-red-800" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
       }`}
     >
@@ -87,12 +92,16 @@ export function EnquiriesList() {
         subtitle="Every enquiry from first contact to Finalised or Declined."
         actions={
           <Button variant="primary" onClick={() => router.push("/enquiries/new")}>
-            + New enquiry
+            <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> New enquiry
           </Button>
         }
       />
 
-      <div className="mb-3 flex flex-wrap gap-2" aria-label="Filter by status">
+      {/* Phones: one row that scrolls sideways, edge to edge. Larger screens: chips wrap. */}
+      <div
+        className="-mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+        aria-label="Filter by status"
+      >
         {chip(!statuses.length, <>All <b>{totalAll}</b></>, () => setStatuses([]), "all")}
         {chip(sameSet(statuses, OPEN_STATUSES), <>Open <b>{openCount}</b></>, () => setStatuses(OPEN_STATUSES), "open")}
         {STATUSES.map((s) =>
@@ -109,18 +118,27 @@ export function EnquiriesList() {
         )}
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
-        <input
-          type="search"
-          aria-label="Search enquiries"
-          placeholder="Search by number, client or project…"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="min-w-[240px] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100"
-        />
+      {/*
+        Phones: a two-column grid in a fixed order (search · client + source · assignee + follow-up ·
+        from–to dates · sort). From the sm breakpoint everything flows on one wrapping row.
+      */}
+      <div className="mb-4 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:items-center">
+        <div className="relative col-span-2 sm:min-w-[240px] sm:flex-1">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+            <Icon icon={Search} />
+          </span>
+          <input
+            type="search"
+            aria-label="Search enquiries"
+            placeholder="Search number, client or project"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className={`${control} w-full pl-9 pr-3 outline-none transition-[border-color,box-shadow] placeholder:text-slate-400 focus:border-red-700 focus:ring-3 focus:ring-red-700/10`}
+          />
+        </div>
         <select
           aria-label="Filter by client"
           value={clientId}
@@ -128,7 +146,7 @@ export function EnquiriesList() {
             setClientId(e.target.value);
             setPage(1);
           }}
-          className="max-w-[200px] rounded-md border border-slate-300 bg-white px-2.5 py-2"
+          className={`${control} min-w-0 px-2.5 sm:max-w-[200px]`}
         >
           <option value="">All clients</option>
           {clients?.items.map((c) => (
@@ -141,9 +159,9 @@ export function EnquiriesList() {
           aria-label="Filter by lead source"
           value={leadSource}
           onChange={(e) => setLeadSource(e.target.value as LeadSource | "")}
-          className="rounded-md border border-slate-300 bg-white px-2.5 py-2"
+          className={`${control} min-w-0 px-2.5`}
         >
-          <option value="">All lead sources</option>
+          <option value="">Any source</option>
           {LEAD_SOURCES.map((l) => (
             <option key={l.value} value={l.value}>
               {l.label}
@@ -154,7 +172,7 @@ export function EnquiriesList() {
           aria-label="Filter by assignee"
           value={assignedTo}
           onChange={(e) => setAssignedTo(e.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-2.5 py-2"
+          className={`${control} min-w-0 px-2.5`}
         >
           <option value="">Anyone</option>
           <option value="unassigned">Unassigned</option>
@@ -164,31 +182,35 @@ export function EnquiriesList() {
             </option>
           ))}
         </select>
-        <label className="flex items-center gap-1 text-xs text-slate-600">
-          From
-          <input type="date" aria-label="From date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5" />
-        </label>
-        <label className="flex items-center gap-1 text-xs text-slate-600">
-          To
-          <input type="date" aria-label="To date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1.5" />
-        </label>
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-300 bg-white px-2.5 py-2 text-xs font-medium text-slate-700">
+        <label className={`${control} flex cursor-pointer items-center gap-2 px-3 text-slate-700`}>
           <input
             type="checkbox"
-            className="accent-red-700"
+            className="h-4 w-4 shrink-0 accent-red-700"
             checked={needsFollowUp}
             onChange={(e) => {
               setNeedsFollowUp(e.target.checked);
               setPage(1);
             }}
           />
-          Needs follow-up
+          <span className="truncate">Needs follow-up</span>
         </label>
+        <fieldset className="col-span-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1 sm:flex sm:items-center">
+          <legend className="sr-only">Enquiry date</legend>
+          <span aria-hidden className="col-span-3 text-xs text-slate-500 sm:hidden">
+            Enquiry date
+          </span>
+          <input type="date" aria-label="From date" value={from} onChange={(e) => setFrom(e.target.value)} className={`${control} min-w-0 px-2 sm:w-40`} />
+          <span aria-hidden className="text-slate-400">
+            –
+          </span>
+          <input type="date" aria-label="To date" value={to} onChange={(e) => setTo(e.target.value)} className={`${control} min-w-0 px-2 sm:w-40`} />
+        </fieldset>
+        <div className="col-span-2 flex items-center gap-2">
         <select
           aria-label="Sort by"
           value={sort}
           onChange={(e) => setSort(e.target.value as typeof sort)}
-          className="rounded-md border border-slate-300 bg-white px-2.5 py-2"
+          className={`${control} min-w-0 flex-1 px-2.5 sm:flex-none`}
         >
           <option value="updated">Last updated</option>
           <option value="date">Enquiry date</option>
@@ -198,17 +220,21 @@ export function EnquiriesList() {
         <button
           type="button"
           aria-label={dir === "asc" ? "Ascending" : "Descending"}
+          title={dir === "asc" ? "Ascending" : "Descending"}
           onClick={() => setDir(dir === "asc" ? "desc" : "asc")}
-          className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
         >
-          {dir === "asc" ? "↑" : "↓"}
+          <Icon icon={dir === "asc" ? ArrowUpNarrowWide : ArrowDownWideNarrow} />
         </button>
-        {anyFilter ? (
-          <button type="button" className="text-xs font-medium text-red-700 hover:underline" onClick={reset}>
-            Clear filters
-          </button>
-        ) : null}
-        <span className="ml-auto text-xs text-slate-500">{data ? `${data.total} enquir${data.total === 1 ? "y" : "ies"}` : ""}</span>
+        </div>
+        <div className="col-span-2 flex items-center gap-3 sm:ml-auto">
+          {anyFilter ? (
+            <button type="button" className="text-xs font-medium text-red-700 hover:underline" onClick={reset}>
+              Clear filters
+            </button>
+          ) : null}
+          <span className="ml-auto text-xs tabular-nums text-slate-500">{data ? `${data.total} enquir${data.total === 1 ? "y" : "ies"}` : ""}</span>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -227,9 +253,10 @@ export function EnquiriesList() {
             ) : null}
           </EmptyState>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[1100px] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <thead className="bg-slate-50 text-left text-xs text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Number</th>
                   <th className="px-4 py-3">Date</th>
@@ -249,9 +276,9 @@ export function EnquiriesList() {
                     key={e.id}
                     data-testid="enquiry-row"
                     onClick={() => router.push(`/enquiries/${e.id}`)}
-                    className={`cursor-pointer hover:bg-red-50/40 ${e.needsFollowUp ? "bg-amber-50/40" : ""}`}
+                    className={`cursor-pointer hover:bg-slate-50 ${e.needsFollowUp ? "bg-amber-50/40" : ""}`}
                   >
-                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">{e.number}</td>
+                    <td className="ref-code whitespace-nowrap px-4 py-3 font-medium text-slate-900">{e.number}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(e.enquiryDate)}</td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{e.clientName}</div>
@@ -275,7 +302,7 @@ export function EnquiriesList() {
                       <span className={e.needsFollowUp ? "font-semibold text-red-700" : "text-slate-500"}>
                         {e.daysSinceUpdate === 0 ? "Today" : `${e.daysSinceUpdate}d`}
                       </span>
-                      {e.needsFollowUp ? <div className="text-[10px] font-medium uppercase text-red-700">Follow up</div> : null}
+                      {e.needsFollowUp ? <div className="text-[11px] font-medium text-red-700">Follow up</div> : null}
                     </td>
                     <td className="px-2 py-3">
                       <OptionsMenu label={`Options for ${e.number}`} items={menu(e)} />
@@ -285,6 +312,34 @@ export function EnquiriesList() {
               </tbody>
             </table>
           </div>
+          <ul className="divide-y divide-slate-100 md:hidden">
+            {data.items.map((e) => (
+              <li
+                key={e.id}
+                data-testid="enquiry-card"
+                onClick={() => router.push(`/enquiries/${e.id}`)}
+                className="flex cursor-pointer items-start gap-2 py-3 pl-4 pr-2 transition-colors active:bg-slate-50"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="ref-code font-medium text-slate-900">{e.number}</span>
+                    <StatusBadge status={e.status} />
+                  </div>
+                  <div className="mt-1 truncate text-sm font-medium text-slate-900">{e.clientName}</div>
+                  <div className="truncate text-sm text-slate-600">{e.projectName}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
+                    <span>{formatDate(e.enquiryDate)}</span>
+                    {e.latestValue !== null ? <span className="tabular-nums">· {formatRupee(e.latestValue)}</span> : null}
+                    {e.needsFollowUp ? <span className="font-medium text-red-700">· Follow up</span> : null}
+                  </div>
+                </div>
+                <div onClick={(ev) => ev.stopPropagation()}>
+                  <OptionsMenu label={`Options for ${e.number}`} items={menu(e)} />
+                </div>
+              </li>
+            ))}
+          </ul>
+          </>
         )}
       </div>
 

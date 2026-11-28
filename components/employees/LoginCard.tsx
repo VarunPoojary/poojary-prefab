@@ -6,16 +6,30 @@ import { useToast } from "@/components/Providers";
 import { Button, Card, Select, TextField, Toggle } from "@/components/ui/fields";
 import { Modal } from "@/components/ui/overlays";
 import { useAuth } from "@/lib/auth/AuthProvider";
-import { ROLE_LABELS, type Role } from "@/lib/auth/types";
+import { ADMIN_ROLE, ASSIGNABLE_PAGES } from "@/lib/auth/roles";
+import type { Role } from "@/lib/auth/types";
+import { useRoles } from "@/lib/settings/hooks";
 import { useCreateLogin, useEmployeeLogin, useResetPassword, useSetLoginEnabled, useSetRole } from "@/lib/employees/hooks";
 import type { CreatedLogin, Employee } from "@/lib/employees/types";
 import { formatDateTime } from "@/lib/format";
+import { Lock } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
-const ROLES: { value: Role; label: string }[] = [
-  { value: "staff", label: "Staff – quotations, enquiries and clients" },
-  { value: "accountant", label: "Accountant – payroll and expense payments only" },
-  { value: "admin", label: "Admin – everything, including employees and salaries" },
-];
+/** Role choices from Settings → Roles and access, each with the pages it opens. */
+function useRoleOptions(current?: Role) {
+  const { roles } = useRoles();
+  const pageLabel = (k: string) => ASSIGNABLE_PAGES.find((p) => p.key === k)?.label ?? k;
+  const options = roles.map((r) => ({
+    value: r.id,
+    label:
+      r.id === ADMIN_ROLE
+        ? "Admin – everything, including employees, salaries and settings"
+        : `${r.name} – ${r.pages.length ? r.pages.map(pageLabel).join(", ") : "no pages yet"}`,
+  }));
+  if (current && !roles.some((r) => r.id === current)) options.push({ value: current, label: `${current} (role no longer exists)` });
+  const fallback = roles.find((r) => r.id === "staff")?.id ?? roles.find((r) => r.id !== ADMIN_ROLE)?.id ?? ADMIN_ROLE;
+  return { options, fallback, name: (id: Role) => roles.find((r) => r.id === id)?.name ?? id };
+}
 
 /** Shows a temporary password once, with copy buttons. */
 function PasswordReveal({ employee, created, onClose }: { employee: Employee; created: CreatedLogin; onClose: () => void }) {
@@ -41,7 +55,7 @@ function PasswordReveal({ employee, created, onClose }: { employee: Employee; cr
         <dl className="rounded-lg bg-slate-50 p-3">
           <InfoRow label="Username">{created.login.username}</InfoRow>
           <InfoRow label="Temporary password">
-            <code data-testid="temp-password" className="rounded bg-white px-2 py-0.5 font-mono text-base font-semibold tracking-wider">
+            <code data-testid="temp-password" className="rounded bg-white px-2 py-0.5 font-mono text-base font-semibold ">
               {created.temporaryPassword}
             </code>
           </InfoRow>
@@ -65,7 +79,8 @@ function PasswordReveal({ employee, created, onClose }: { employee: Employee; cr
 function CreateLoginDialog({ employee, onClose, onCreated }: { employee: Employee; onClose: () => void; onCreated: (c: CreatedLogin) => void }) {
   const create = useCreateLogin();
   const [username, setUsername] = useState(employee.mobile);
-  const [role, setRole] = useState<Role>("staff");
+  const roleOptions = useRoleOptions();
+  const [role, setRole] = useState<Role>(roleOptions.fallback);
   const [mustChange, setMustChange] = useState(true);
   const [issues, setIssues] = useState<string[]>([]);
   return (
@@ -93,7 +108,7 @@ function CreateLoginDialog({ employee, onClose, onCreated }: { employee: Employe
     >
       <div className="space-y-4">
         <TextField label="Username" required value={username} onChange={setUsername} hint="Their mobile number is easiest to remember." />
-        <Select label="Role" value={role} onChange={setRole} options={ROLES} />
+        <Select label="Role" value={role} onChange={setRole} options={roleOptions.options} hint="Change what each role can open in Settings → Roles and access." />
         <Toggle checked={mustChange} onChange={setMustChange} label="Ask them to change the password at first sign-in" hint="Recommended." />
         <p className="text-xs text-slate-500">A temporary password is generated and shown once after you create the login.</p>
         <ErrorList issues={issues} />
@@ -109,6 +124,7 @@ export function LoginCard({ employee, autoCreate }: { employee: Employee; autoCr
   const { data: login, isPending } = useEmployeeLogin(employee.id);
   const reset = useResetPassword();
   const setRole = useSetRole();
+  const roleOptions = useRoleOptions(login?.role);
   const setEnabled = useSetLoginEnabled();
   const [creating, setCreating] = useState(!!autoCreate && employee.status === "active");
   const [revealed, setRevealed] = useState<CreatedLogin | null>(null);
@@ -143,7 +159,7 @@ export function LoginCard({ employee, autoCreate }: { employee: Employee; autoCr
                 {login.enabled ? (
                   <span className="font-medium text-emerald-700">Enabled</span>
                 ) : (
-                  <span className="font-medium text-slate-500">🔒 Disabled</span>
+                  <span className="font-medium text-slate-500"><Icon icon={Lock} size={14} className="mr-1 inline-block align-[-2px]" />Disabled</span>
                 )}
                 {login.lockedUntil && new Date(login.lockedUntil).getTime() > now ? (
                   <span className="ml-2 text-xs text-amber-700">(locked after failed attempts until {formatDateTime(login.lockedUntil)})</span>
@@ -157,9 +173,10 @@ export function LoginCard({ employee, autoCreate }: { employee: Employee; autoCr
                 label="Role"
                 value={login.role}
                 onChange={(role) =>
-                  setRole.mutate({ id: employee.id, role }, { onSuccess: () => toast(`Role changed to ${ROLE_LABELS[role]}.`), onError: fail })
+                  setRole.mutate({ id: employee.id, role }, { onSuccess: () => toast(`Role changed to ${roleOptions.name(role)}.`), onError: fail })
                 }
-                options={ROLES}
+                options={roleOptions.options}
+                hint="Change what each role can open in Settings → Roles and access."
               />
             </div>
             <div className="flex flex-wrap gap-2">

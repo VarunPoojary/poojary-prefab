@@ -49,6 +49,16 @@ export interface SiteDay {
   editedAt?: string;
 }
 
+/** Attendance for the Factory / Site dashboards over a date range: who was where, which site days were logged. */
+export interface DashboardAttendance {
+  records: Pick<AttendanceRecord, "personKind" | "personId" | "date" | "status" | "location" | "projectId">[];
+  siteDays: Pick<SiteDay, "projectId" | "date" | "holiday" | "loggedBy" | "loggedAt">[];
+  /** Company holidays (no site reminders). */
+  holidays: string[];
+  /** Default daily site reminder time (HH:MM). */
+  reminderTime: string;
+}
+
 export interface CasualWorker {
   id: string;
   name: string;

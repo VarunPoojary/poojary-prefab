@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ListKey } from "@/lib/projects/config";
 import type { ListItem, StageKey, TemplateTask } from "@/lib/projects/types";
+import { roleDefs, type RoleDef } from "@/lib/auth/roles";
 import { settingsRepo } from "./index";
 import type { AttendanceSettings, PayrollSettings } from "./types";
 
@@ -46,6 +47,25 @@ export function useSavePayrollSettings() {
     onSuccess: (s) => {
       qc.setQueryData(settingsKey, s);
       void qc.invalidateQueries({ queryKey: ["payroll"] });
+    },
+  });
+}
+
+/** The roles from Settings, plus a name lookup (re-renders when roles are saved). */
+export function useRoles() {
+  const { data } = useSettings();
+  const roles = data?.roles ?? roleDefs();
+  return { roles, name: (id: string | null | undefined) => (id ? (roles.find((r) => r.id === id)?.name ?? id) : "") };
+}
+
+export function useSaveRoles() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (roles: RoleDef[]) => settingsRepo.saveRoles(roles),
+    onSuccess: (s) => {
+      qc.setQueryData(settingsKey, s);
+      // Page access changed: let every module re-check what the user may see.
+      void qc.invalidateQueries();
     },
   });
 }

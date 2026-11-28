@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useState } from "react";
 import {
   Button,
@@ -26,7 +28,7 @@ export function TermsStep() {
   return (
     <div className="space-y-5">
       <Card title="Payment terms" description="Clause: Payment Terms. The three parts must total 100%.">
-        <div className="grid items-end gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-4">
           <NumberField label="Advance" suffix="%" required value={p.advancePct} onChange={(v) => setP("advancePct", v)} />
           <NumberField
             label="Against inspection"
@@ -45,12 +47,12 @@ export function TermsStep() {
           />
         </div>
         <p className={`mt-2 text-xs font-medium ${paySum === 100 ? "text-emerald-700" : "text-red-700"}`}>
-          Total: {paySum}% {paySum === 100 ? "✓" : "– must be 100%"}
+          Total: {paySum}% {paySum === 100 ? "" : "– must be 100%"}
         </p>
       </Card>
 
       <Card title="Timelines" description="Clause: Supply and Completion of Work.">
-        <div className="grid items-end gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-3">
           <NumberField
             label="Design submission within"
             suffix="days"
@@ -76,7 +78,7 @@ export function TermsStep() {
             onChange={(v) => setP("completionDays", v)}
           />
         </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Toggle
             checked={p.separateDesignQuote}
             onChange={(v) => setP("separateDesignQuote", v)}
@@ -92,7 +94,7 @@ export function TermsStep() {
       </Card>
 
       <Card title="Safety, insurance & other terms">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <NumberField
             label="Safety officer charge (per month)"
             suffix="₹"
@@ -172,7 +174,7 @@ function ClauseList() {
             setOpen(id);
           }}
         >
-          + Add clause
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add clause
         </Button>
       }
     >
@@ -184,16 +186,16 @@ function ClauseList() {
           const preview = fillTemplate(c.text, vars).replace(/\n- /g, " • ");
           return (
             <li key={c.id} className={`rounded-lg border ${isOpen ? "border-red-200 bg-red-50/30" : "border-slate-200"} p-3`}>
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-2 sm:gap-3">
                 <Toggle checked={c.enabled} onChange={(v) => update((d) => void (d.terms.clauses[i].enabled = v))} label="" />
-                <button type="button" className="flex-1 text-left" onClick={() => setOpen(isOpen ? null : c.id)}>
+                <button type="button" className="min-w-0 flex-1 break-words text-left" onClick={() => setOpen(isOpen ? null : c.id)}>
                   <div className="text-sm">
                     <span className="mr-1 font-semibold text-slate-500">{num ? `${num}.` : "—"}</span>
                     <span className={`font-semibold ${c.enabled ? "text-slate-900" : "text-slate-400 line-through"}`}>
                       {c.title || (c.custom ? "Custom clause" : preview.slice(0, 60) + "…")}
                     </span>
                     {def && (c.text !== def.text || c.title !== def.title) ? (
-                      <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800">
+                      <span className="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                         edited
                       </span>
                     ) : null}
@@ -211,7 +213,7 @@ function ClauseList() {
                 />
               </div>
               {isOpen ? (
-                <div className="mt-3 space-y-3 pl-12">
+                <div className="mt-3 space-y-3 sm:pl-12">
                   <TextField
                     label="Title (bold, optional)"
                     value={c.title}
@@ -233,8 +235,8 @@ function ClauseList() {
                         : undefined
                     }
                   />
-                  <div className="rounded-md bg-slate-50 p-3 text-xs leading-relaxed text-slate-700 ring-1 ring-slate-200">
-                    <div className="mb-1 font-semibold uppercase text-slate-500">As printed</div>
+                  <div className="rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-700 ring-1 ring-slate-200">
+                    <div className="mb-1 font-semibold text-slate-500">As printed</div>
                     <p className="whitespace-pre-line">{fillTemplate(c.text, vars)}</p>
                   </div>
                 </div>

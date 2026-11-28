@@ -155,7 +155,7 @@ function StatusDialogBody({ enquiryId, onClose, initialTo }: { enquiryId: string
               ) : (
                 <p className="text-sm text-red-800">Link the accepted quotation to this enquiry before finalising it.</p>
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <TextField label="PO / LOI number" required value={poNumber} onChange={setPoNumber} />
                 <TextField label="PO / LOI date" type="date" required value={poDate} onChange={setPoDate} />
               </div>

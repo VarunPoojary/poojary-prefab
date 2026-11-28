@@ -70,7 +70,7 @@ export function NewProject() {
             type="button"
             aria-selected={mode === k}
             onClick={() => setMode(k)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${mode === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
+            className={`rounded-lg px-4 py-1.5 text-sm font-medium ${mode === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
           >
             {l}
           </button>
@@ -95,7 +95,7 @@ export function NewProject() {
           </Card>
         ) : (
           <Card title="Project">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <SearchSelect
                   label="Client *"
@@ -130,7 +130,7 @@ export function NewProject() {
           </Card>
         )}
         <Card title="Schedule and team">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <TextField label="Start date" required type="date" value={f.startDate} onChange={(v) => set({ startDate: v })} />
             <TextField label="Planned completion" type="date" value={f.plannedCompletion} onChange={(v) => set({ plannedCompletion: v })} hint="Saved as the baseline." />
             {mode === "unlinked" ? (

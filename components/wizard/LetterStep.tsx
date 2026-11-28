@@ -12,7 +12,7 @@ export function LetterStep() {
   return (
     <div className="space-y-5">
       <Card title="Salutation" description="Used on the cover letter and at the top of the pricing page.">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Select
             label="Salutation"
             value={isPreset ? q.letter.salutation : CUSTOM}
@@ -53,7 +53,7 @@ export function LetterStep() {
       </Card>
 
       <Card title="Signatory">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             label="Name"
             value={q.letter.signatoryName}

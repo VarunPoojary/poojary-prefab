@@ -6,15 +6,17 @@ import { ErrorList, useUserName } from "@/components/crm/ui";
 import { FileLink, PhotoPicker, PhotoThumbs } from "@/components/files/Files";
 import { useToast } from "@/components/Providers";
 import { Button, Card } from "@/components/ui/fields";
+import { EVENT_ICONS, Icon } from "@/components/ui/icons";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { uploadFile, type PhotoRef } from "@/lib/files";
 import { formatDate } from "@/lib/format";
 import { projectRepo } from "@/lib/projects";
-import { EVENT_TYPES, MONEY_EVENT_TYPES } from "@/lib/projects/config";
+import { MONEY_EVENT_TYPES } from "@/lib/projects/config";
 import { useEvents, useProjectMutation } from "@/lib/projects/hooks";
 import { onTeam, todayIso } from "@/lib/projects/rules";
 import type { EventType, NewNote, Project, ProjectEvent } from "@/lib/projects/types";
 import { useList } from "@/lib/settings/hooks";
+import { Paperclip, X } from "lucide-react";
 
 /** Filter groups shown to users (Progress covers progress updates plus task and stage events). */
 const TYPE_FILTERS: { value: string; label: string; types: EventType[] }[] = [
@@ -54,10 +56,10 @@ function NoteComposer({ project }: { project: Project }) {
         rows={2}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100"
       />
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <select aria-label="Note tag" value={tag} onChange={(e) => setTag(e.target.value)} className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm">
+        <select aria-label="Note tag" value={tag} onChange={(e) => setTag(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm">
           {tags.items.map((t) => (
             <option key={t.value} value={t.value}>
               {t.label}
@@ -68,7 +70,7 @@ function NoteComposer({ project }: { project: Project }) {
           aria-label="Mention a team member"
           value=""
           onChange={(e) => e.target.value && setMentions((m) => [...new Set([...m, e.target.value])])}
-          className="rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm"
+          className="rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm"
         >
           <option value="">@ Mention…</option>
           {team.map((id) => (
@@ -78,10 +80,10 @@ function NoteComposer({ project }: { project: Project }) {
           ))}
         </select>
         {mentions.map((id) => (
-          <span key={id} className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800">
+          <span key={id} className="inline-flex items-center gap-1 rounded-lg bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-800">
             @{userName(id)}
             <button type="button" aria-label={`Remove mention of ${userName(id)}`} onClick={() => setMentions((m) => m.filter((x) => x !== id))}>
-              ✕
+              <Icon icon={X} size={16} />
             </button>
           </span>
         ))}
@@ -105,7 +107,7 @@ function NoteComposer({ project }: { project: Project }) {
           }}
         />
         <Button size="sm" variant="ghost" onClick={() => fileRef.current?.click()}>
-          📎 File
+          <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" />File
         </Button>
       </div>
       <div className="mt-2">
@@ -115,9 +117,9 @@ function NoteComposer({ project }: { project: Project }) {
         <ul className="mt-2 space-y-1 text-sm">
           {files.map((f) => (
             <li key={f.fileId} className="flex items-center gap-2">
-              📎 <FileLink file={f} />
+              <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={f} />
               <button type="button" className="text-xs text-slate-400 hover:text-red-700" onClick={() => setFiles((x) => x.filter((y) => y.fileId !== f.fileId))}>
-                ✕
+                <Icon icon={X} size={16} />
               </button>
             </li>
           ))}
@@ -165,7 +167,7 @@ function Entry({ e, project }: { e: ProjectEvent; project: Project }) {
   const [tag, setTag] = useState(e.tag);
   const edit = useProjectMutation(() => projectRepo.editNote(project.id, e.id, text, tag));
   const del = useProjectMutation(() => projectRepo.deleteNote(project.id, e.id));
-  const icon = EVENT_TYPES.find((t) => t.value === e.type)?.icon ?? "•";
+  const icon = EVENT_ICONS[e.type];
   const own = e.type === "note" && e.by === user?.id;
   const canDelete = e.type === "note" && (own || user?.role === "admin");
   const s = e.source;
@@ -189,19 +191,19 @@ function Entry({ e, project }: { e: ProjectEvent; project: Project }) {
 
   return (
     <li className="flex gap-3 py-2.5" data-testid="timeline-entry" data-type={e.type}>
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm">{icon}</span>
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500">{icon ? <Icon icon={icon} size={14} /> : null}</span>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
           <span className="font-semibold text-slate-700">{userName(e.by)}</span>
           <span>{timeOf(e.at)}</span>
-          {e.tag && e.type === "note" ? <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">{tags.label(e.tag)}</span> : null}
+          {e.tag && e.type === "note" ? <span className="rounded-lg bg-amber-100 px-2 py-0.5 font-medium text-amber-900">{tags.label(e.tag)}</span> : null}
           {e.editedAt ? <span className="italic">edited</span> : null}
         </div>
         {editing ? (
           <div className="mt-1 space-y-2">
-            <textarea aria-label="Edit note" value={text} onChange={(ev) => setText(ev.target.value)} rows={2} className="w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm" />
+            <textarea aria-label="Edit note" value={text} onChange={(ev) => setText(ev.target.value)} rows={2} className="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm" />
             <div className="flex gap-2">
-              <select aria-label="Edit tag" value={tag} onChange={(ev) => setTag(ev.target.value)} className="rounded-md border border-slate-300 px-2 py-1 text-xs">
+              <select aria-label="Edit tag" value={tag} onChange={(ev) => setTag(ev.target.value)} className="rounded-lg border border-slate-300 px-2 py-1 text-xs">
                 {tags.items.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -233,7 +235,7 @@ function Entry({ e, project }: { e: ProjectEvent; project: Project }) {
         ) : null}
         {others.map((f) => (
           <div key={f.fileId} className="mt-1 text-sm">
-            📎 <FileLink file={f} />
+            <Icon icon={Paperclip} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={f} />
           </div>
         ))}
         {(own || canDelete) && !editing ? (
@@ -295,7 +297,7 @@ export function Timeline({ project }: { project: Project }) {
 
   const [[today, yesterday]] = useState(() => [todayIso(), todayIso(Date.now() - 86_400_000)]);
   const dayLabel = (d: string) => (d === today ? "Today" : d === yesterday ? "Yesterday" : formatDate(d));
-  const sel = "rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs";
+  const sel = "rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs";
 
   return (
     <Card title="F. Timeline and notes">
@@ -337,7 +339,7 @@ export function Timeline({ project }: { project: Project }) {
         <div className="space-y-3">
           {groups.map(([day, list]) => (
             <section key={day}>
-              <h4 className="sticky top-0 z-10 bg-white py-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{dayLabel(day)}</h4>
+              <h4 className="sticky top-0 z-10 bg-white py-1 text-xs font-semibold text-slate-500">{dayLabel(day)}</h4>
               <ul className="divide-y divide-slate-100">
                 {list.map((e) => (
                   <Entry key={e.id} e={e} project={project} />

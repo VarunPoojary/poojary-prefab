@@ -17,13 +17,15 @@ import type { CompanyRow, EmployeeMonthView, MonthStatus, PayrollPaymentMode, Se
 import type { Paise } from "@/lib/paise";
 import { todayIso } from "@/lib/projects/rules";
 import { AdvanceDialog, MonthBadge, MonthPicker, PayDialog, rupee, rupeeExact } from "./dialogs";
+import { Download, TriangleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
-const sel = "rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm";
+const sel = "rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm";
 
 function Tile({ label, value, testId, strong }: { label: string; value: string; testId?: string; strong?: boolean }) {
   return (
     <div className={`rounded-lg border px-3 py-2 ${strong ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}>
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="text-[11px] font-semibold text-slate-500">{label}</div>
       <div className="mt-0.5 text-base font-semibold tabular-nums text-slate-900" data-testid={testId}>
         {value}
       </div>
@@ -106,7 +108,7 @@ function SettleWizard({ initialMonth, maxMonth, onClose }: { initialMonth: strin
 
   return (
     <Modal open wide onClose={onClose} title={`Settle all – ${monthLabel(month)}`} footer={footer}>
-      <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1 text-sm" data-testid="settle-wizard">
+      <div className="space-y-4 text-sm" data-testid="settle-wizard">
         {step === "review" ? (
           <>
             <div className="flex flex-wrap items-center gap-2">
@@ -127,7 +129,7 @@ function SettleWizard({ initialMonth, maxMonth, onClose }: { initialMonth: strin
                 {lines.length ? (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[640px]" data-testid="settle-ready">
-                      <thead className="text-left text-xs uppercase text-slate-500">
+                      <thead className="text-left text-xs text-slate-500">
                         <tr>
                           <th className="py-1">Employee</th>
                           <th className="text-right">Gross</th>
@@ -189,14 +191,14 @@ function SettleWizard({ initialMonth, maxMonth, onClose }: { initialMonth: strin
         ) : null}
         {step === "payment" ? (
           <>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <TextField label="Payment date" type="date" value={date} onChange={setDate} />
               <Select<PayrollPaymentMode | ""> label="Mode" value={mode} onChange={setMode} options={PAYMENT_MODES} />
               <TextField label="Batch reference" value={reference} onChange={setReference} placeholder="Bank upload / batch no." />
             </div>
             <details>
               <summary className="cursor-pointer text-sm font-medium text-slate-700">Per-employee references (optional)</summary>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {payable.map((l) => (
                   <TextField key={l.employee.id} label={l.employee.name} value={refs[l.employee.id] ?? ""} onChange={(v) => setRefs((x) => ({ ...x, [l.employee.id]: v }))} placeholder="UTR" />
                 ))}
@@ -244,7 +246,7 @@ function SettleWizard({ initialMonth, maxMonth, onClose }: { initialMonth: strin
 
 /* ---------- page ---------- */
 
-/** ☰ Payroll: the whole company's salaries for a month (Admin and Accountant). */
+/** Payroll page: the whole company's salaries for a month (Admin and Accountant). */
 export function PayrollPage() {
   const toast = useToast();
   const userName = useUserName();
@@ -328,7 +330,7 @@ export function PayrollPage() {
         subtitle="Salary = monthly salary ÷ 30 × (30 − loss-of-pay days). Wages are due by the 7th of the next month."
         actions={
           <>
-            <Button onClick={exportCsv}>⬇ Export CSV</Button>
+            <Button onClick={exportCsv}><Icon icon={Download} size={16} />Export CSV</Button>
             <Button variant="primary" onClick={() => setSettling(true)}>
               Settle all…
             </Button>
@@ -356,18 +358,18 @@ export function PayrollPage() {
           </div>
           <div className="mb-3 flex flex-wrap items-center gap-2" data-testid="payroll-chips">
             {notLoggedCount ? (
-              <button type="button" aria-pressed={onlyNotLogged} onClick={() => setOnlyNotLogged(!onlyNotLogged)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-2 ${onlyNotLogged ? "ring-slate-900" : "ring-transparent"} bg-red-100 text-red-800`}>
-                ⚠️ {notLoggedCount} with Not logged days
+              <button type="button" aria-pressed={onlyNotLogged} onClick={() => setOnlyNotLogged(!onlyNotLogged)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${onlyNotLogged ? "ring-slate-900" : "ring-transparent"} bg-red-100 text-red-800`}>
+                <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />{notLoggedCount} with Not logged days
               </button>
             ) : null}
             {advanceCount ? (
-              <button type="button" aria-pressed={onlyAdvance} onClick={() => setOnlyAdvance(!onlyAdvance)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-2 ${onlyAdvance ? "ring-slate-900" : "ring-transparent"} bg-amber-100 text-amber-900`}>
+              <button type="button" aria-pressed={onlyAdvance} onClick={() => setOnlyAdvance(!onlyAdvance)} className={`rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${onlyAdvance ? "ring-slate-900" : "ring-transparent"} bg-amber-100 text-amber-900`}>
                 {advanceCount} with advance outstanding
               </button>
             ) : null}
             {data!.excluded.length ? <span className="text-xs text-slate-500">Not in payroll: {data!.excluded.map((x) => `${x.employee.name} (${x.reason.replace(/\.$/, "")})`).join(", ")}</span> : null}
           </div>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="filter-bar mb-3 flex flex-wrap items-center gap-2">
             <input type="search" aria-label="Search employees" placeholder="Search name or employee ID…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-[220px] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" />
             <select aria-label="Filter by department" value={department} onChange={(e) => setDepartment(e.target.value)} className={sel}>
               <option value="">All departments</option>
@@ -390,8 +392,8 @@ export function PayrollPage() {
             {isPending ? (
               <LoadingRows />
             ) : (
-              <table className="w-full min-w-[1150px] text-sm" data-testid="payroll-list">
-                <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <table className="stack-table w-full min-w-[1150px] text-sm" data-testid="payroll-list">
+                <thead className="bg-slate-50 text-left text-xs text-slate-500">
                   <tr>
                     <th className="px-3 py-2">Employee</th>
                     <th className="px-2 text-right">Monthly salary</th>
@@ -416,36 +418,38 @@ export function PayrollPage() {
                           {r.employee.code} · {r.employee.designation}
                         </span>
                       </td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.salaryPaise)}</td>
-                      <td className="px-2 text-right tabular-nums">
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(r.salaryPaise)}</td>
+                      <td data-half data-label="LOP days" className="px-2 text-right tabular-nums">
                         {r.lopDays}
                         {r.notLoggedDays ? <span className="block text-xs text-red-700">{r.notLoggedDays} not logged</span> : null}
                       </td>
-                      <td className="px-2 text-right tabular-nums">
+                      <td data-half data-label="Gross" className="px-2 text-right tabular-nums">
                         {rupee(r.grossPaise)}
-                        {r.estimate ? <span className="block text-[10px] text-slate-400">estimate</span> : null}
+                        {r.estimate ? <span className="block text-xs text-slate-500">estimate</span> : null}
                       </td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.advancesThisMonthPaise)}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.outstandingNowPaise)}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.recoveryPaise)}</td>
-                      <td className="px-2 text-right font-semibold tabular-nums">{rupee(r.netPaise)}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.paidPaise)}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(r.balancePaise)}</td>
-                      <td className="px-2">
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(r.advancesThisMonthPaise)}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(r.outstandingNowPaise)}</td>
+                      <td data-half data-label="Recovery" className="px-2 text-right tabular-nums">{rupee(r.recoveryPaise)}</td>
+                      <td data-half data-label="Net payable" className="px-2 text-right font-semibold tabular-nums">{rupee(r.netPaise)}</td>
+                      <td data-half data-label="Paid" className="px-2 text-right tabular-nums">{rupee(r.paidPaise)}</td>
+                      <td data-half data-label="Balance" className="px-2 text-right tabular-nums">{rupee(r.balancePaise)}</td>
+                      <td data-menu className="px-2">
                         <MonthBadge status={r.status} />
                       </td>
                       <td className="whitespace-nowrap px-2 text-right">
-                        <button type="button" className="px-1 text-xs font-medium text-slate-700 hover:underline" onClick={() => setAdvanceFor(r)} aria-label={`Give advance to ${r.employee.name}`}>
-                          Advance
-                        </button>
-                        {(r.status === "closed" || r.status === "partly_paid") && r.balancePaise > 0 ? (
-                          <button type="button" className="px-1 text-xs font-medium text-red-700 hover:underline" onClick={() => void pay(r)} aria-label={`Pay ${r.employee.name}`}>
-                            Pay
+                        <div className="flex justify-start gap-1.5 md:justify-end md:gap-0">
+                          <button type="button" className="h-8 rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 md:h-auto md:border-0 md:px-1 md:hover:bg-transparent md:hover:underline" onClick={() => setAdvanceFor(r)} aria-label={`Give advance to ${r.employee.name}`}>
+                            Advance
                           </button>
-                        ) : null}
-                        <Link className="px-1 text-xs font-medium text-slate-700 hover:underline" href={`/employees/${r.employee.id}/payroll?month=${month}`} aria-label={`View ${r.employee.name}`}>
-                          View
-                        </Link>
+                          {(r.status === "closed" || r.status === "partly_paid") && r.balancePaise > 0 ? (
+                            <button type="button" className="h-8 rounded-lg border border-red-200 px-3 text-xs font-medium text-red-700 transition-colors hover:bg-red-50 md:h-auto md:border-0 md:px-1 md:hover:bg-transparent md:hover:underline" onClick={() => void pay(r)} aria-label={`Pay ${r.employee.name}`}>
+                              Pay
+                            </button>
+                          ) : null}
+                          <Link className="inline-flex h-8 items-center rounded-lg border border-slate-300 px-3 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 md:h-auto md:border-0 md:px-1 md:hover:bg-transparent md:hover:underline" href={`/employees/${r.employee.id}/payroll?month=${month}`} aria-label={`View ${r.employee.name}`}>
+                            View
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -454,29 +458,29 @@ export function PayrollPage() {
                   {filtered ? (
                     <tr className="text-slate-600">
                       <td className="px-3 py-2">Filtered ({rows.length})</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("salaryPaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("salaryPaise"))}</td>
                       <td />
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("grossPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("advancesThisMonthPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("outstandingNowPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("recoveryPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("netPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("paidPaise"))}</td>
-                      <td className="px-2 text-right tabular-nums">{rupee(sum("balancePaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("grossPaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("advancesThisMonthPaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("outstandingNowPaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("recoveryPaise"))}</td>
+                      <td data-label="Net payable" className="px-2 text-right tabular-nums">{rupee(sum("netPaise"))}</td>
+                      <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(sum("paidPaise"))}</td>
+                      <td data-label="Balance" className="px-2 text-right tabular-nums">{rupee(sum("balancePaise"))}</td>
                       <td colSpan={2} />
                     </tr>
                   ) : null}
                   <tr data-testid="payroll-totals">
                     <td className="px-3 py-2">Total ({s.count} employees)</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.salaryPaise)}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(s.salaryPaise)}</td>
                     <td />
-                    <td className="px-2 text-right tabular-nums">{rupee(s.grossPaise)}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.advancesPaise)}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee((data?.rows ?? []).reduce((a, r) => a + r.outstandingNowPaise, 0))}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.recoveryPaise)}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.netPaise)}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.paidPaise)}</td>
-                    <td className="px-2 text-right tabular-nums">{rupee(s.balancePaise)}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(s.grossPaise)}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(s.advancesPaise)}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee((data?.rows ?? []).reduce((a, r) => a + r.outstandingNowPaise, 0))}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(s.recoveryPaise)}</td>
+                    <td data-label="Net payable" className="px-2 text-right tabular-nums">{rupee(s.netPaise)}</td>
+                    <td data-mobile-hide className="px-2 text-right tabular-nums">{rupee(s.paidPaise)}</td>
+                    <td data-label="Balance" className="px-2 text-right tabular-nums">{rupee(s.balancePaise)}</td>
                     <td colSpan={2} />
                   </tr>
                 </tfoot>

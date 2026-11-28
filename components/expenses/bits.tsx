@@ -1,5 +1,7 @@
 "use client";
 
+import { Camera, FileText, Receipt, X } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useId, useRef, useState } from "react";
 import { ErrorList } from "@/components/crm/ui";
 import { FileLink } from "@/components/files/Files";
@@ -17,11 +19,11 @@ export const rupee = (p: Paise) => formatPaise(p);
 
 export function ExpenseBadge({ status }: { status: ExpenseStatus }) {
   const m = expenseStatusMeta(status);
-  return <span className={`inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
+  return <span className={`inline-flex whitespace-nowrap rounded-lg px-2 py-0.5 text-[11px] font-semibold ${m.badge}`}>{m.label}</span>;
 }
 
 const inputCls =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition focus:border-red-600 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100";
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition-colors focus:border-red-600 focus:ring-2 focus:ring-red-100 disabled:bg-slate-100";
 
 /** ₹ amount typed exactly (rupees and paise), reported in paise. */
 export function MoneyField({
@@ -107,11 +109,11 @@ export function BillPicker({ bill, onChange }: { bill: PhotoRef | null; onChange
         }}
       />
       {bill ? (
-        <div className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm" data-testid="bill">
-          <span>{bill.type === "application/pdf" ? "📄" : "🧾"}</span>
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm" data-testid="bill">
+          <Icon icon={bill.type === "application/pdf" ? FileText : Receipt} className="text-slate-500" />
           <FileLink file={{ fileId: bill.fileId, name: bill.name }} className="flex-1" />
-          <button type="button" aria-label="Remove bill" className="text-xs text-slate-400 hover:text-red-700" onClick={() => onChange(null)}>
-            ✕
+          <button type="button" aria-label="Remove bill" className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-red-700" onClick={() => onChange(null)}>
+            <Icon icon={X} size={14} />
           </button>
         </div>
       ) : (
@@ -119,9 +121,10 @@ export function BillPicker({ bill, onChange }: { bill: PhotoRef | null; onChange
           type="button"
           disabled={busy}
           onClick={() => ref.current?.click()}
-          className="rounded-md border border-dashed border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:opacity-60"
         >
-          {busy ? "Saving…" : "📷 Add bill photo or PDF"}
+          <Icon icon={Camera} className="text-slate-500" />
+          {busy ? "Saving…" : "Add bill photo or PDF"}
         </button>
       )}
     </div>
@@ -130,7 +133,7 @@ export function BillPicker({ bill, onChange }: { bill: PhotoRef | null; onChange
 
 export function PaymentFields({ value, onChange }: { value: ExpensePayment; onChange: (p: ExpensePayment) => void }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <Select label="Payment mode" value={value.mode} onChange={(mode) => onChange({ ...value, mode })} options={EXPENSE_PAYMENT_MODES} />
       <TextField label="Reference (optional)" value={value.reference} onChange={(reference) => onChange({ ...value, reference })} placeholder="Optional – UTR, cheque no., UPI ref." />
       <TextField label="Payment date" type="date" value={value.date} onChange={(date) => onChange({ ...value, date })} />

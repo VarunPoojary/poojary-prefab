@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { Button, Card, Checkbox, RowActions, Select, TextField, Toggle, move } from "@/components/ui/fields";
 import { uid } from "@/lib/defaults";
 import { useQuotation } from "@/lib/store";
@@ -31,7 +33,7 @@ export function MatrixStep() {
                   update((d) => void d.matrix.rows.push({ id: uid("mx"), description: "", client: false, pppl: false }))
                 }
               >
-                + Add row
+                <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add row
               </Button>
             </>
           ) : null
@@ -51,7 +53,7 @@ export function MatrixStep() {
             />
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase text-slate-500">
+                <tr className="text-left text-xs text-slate-500">
                   <th className="w-8 py-2">#</th>
                   <th className="py-2">Description</th>
                   <th className="w-20 py-2 text-center">Client</th>

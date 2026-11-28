@@ -5,6 +5,7 @@ export type NotificationKind =
   | "milestone_overdue"
   | "enquiry_reopened"
   | "attendance_due"
+  | "progress_due"
   | "expense_requested"
   | "expense_decided"
   | "budget_alert"

@@ -1,12 +1,14 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EmptyState, LoadingRows, PageContainer, PageHeader, useDebounced } from "@/components/crm/ui";
 import { useToast } from "@/components/Providers";
 import { Button } from "@/components/ui/fields";
 import { OptionsMenu } from "@/components/ui/overlays";
-import { ROLE_LABELS } from "@/lib/auth/types";
+import { roleName } from "@/lib/auth/roles";
 import { formatPhone } from "@/lib/crm/rules";
 import { EMPLOYMENT_TYPES } from "@/lib/employees/config";
 import { useEmployees, useLookups, useReactivate } from "@/lib/employees/hooks";
@@ -44,7 +46,7 @@ function downloadCsv(rows: EmployeeSummary[]) {
       r.mobile,
       r.dateOfJoining,
       r.status === "active" ? "Active" : "Inactive",
-      r.login ? `${ROLE_LABELS[r.login.role]}${r.login.enabled ? "" : " (disabled)"}` : "None",
+      r.login ? `${roleName(r.login.role)}${r.login.enabled ? "" : " (disabled)"}` : "None",
     ]
       .map(cell)
       .join(","),
@@ -102,7 +104,7 @@ export function EmployeesList() {
   ];
 
   const select = (lbl: string, value: string, onChange: (v: string) => void, options: [string, string][]) => (
-    <select aria-label={lbl} value={value} onChange={(e) => onChange(e.target.value)} className="rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm">
+    <select aria-label={lbl} value={value} onChange={(e) => onChange(e.target.value)} className="rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm">
       {options.map(([v, l]) => (
         <option key={v} value={v}>
           {l}
@@ -122,12 +124,12 @@ export function EmployeesList() {
               Export CSV
             </Button>
             <Button variant="primary" onClick={() => router.push("/employees/new")}>
-              + Add employee
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add employee
             </Button>
           </>
         }
       />
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="filter-bar mb-4 flex flex-wrap items-center gap-2">
         <input
           type="search"
           aria-label="Search employees"
@@ -182,14 +184,14 @@ export function EmployeesList() {
           <EmptyState title={filtered ? "No employees match these filters." : "No employees yet."} />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <table className="stack-table w-full min-w-[980px] text-sm">
+              <thead className="bg-slate-50 text-left text-xs text-slate-500">
                 <tr>
                   {COLUMNS.map((c) => (
                     <th key={c.key} className="px-4 py-2" aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}>
-                      <button type="button" className="flex items-center gap-1 uppercase hover:text-slate-800" onClick={() => sortBy(c.key)}>
+                      <button type="button" className="flex items-center gap-1 hover:text-slate-800" onClick={() => sortBy(c.key)}>
                         {c.label}
-                        <span className="text-[10px]">{sort === c.key ? (dir === "asc" ? "▲" : "▼") : ""}</span>
+                        <span className="text-[11px]">{sort === c.key ? (dir === "asc" ? "▲" : "▼") : ""}</span>
                       </button>
                     </th>
                   ))}
@@ -202,28 +204,28 @@ export function EmployeesList() {
                     key={e.id}
                     data-testid="employee-row"
                     onClick={() => router.push(`/employees/${e.id}/details`)}
-                    className={`cursor-pointer hover:bg-red-50/40 ${e.status === "inactive" ? "opacity-60" : ""}`}
+                    className={`cursor-pointer hover:bg-slate-50 ${e.status === "inactive" ? "opacity-60" : ""}`}
                   >
-                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">{e.code}</td>
+                    <td className="ref-code whitespace-nowrap px-4 py-3 font-medium text-slate-900">{e.code}</td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{e.fullName}</div>
                       <div className="text-xs text-slate-500">{typeLabel(e.employmentType)}</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-700">{e.designation}</td>
-                    <td className="px-4 py-3 text-slate-700">{e.department}</td>
-                    <td className="whitespace-nowrap px-4 py-3">
+                    <td data-half data-label="Designation" className="px-4 py-3 text-slate-700">{e.designation}</td>
+                    <td data-half data-label="Department" className="px-4 py-3 text-slate-700">{e.department}</td>
+                    <td data-half data-label="Mobile" className="whitespace-nowrap px-4 py-3">
                       <a href={`tel:+91${e.mobile}`} onClick={(ev) => ev.stopPropagation()} className="text-slate-700 hover:underline">
                         {formatPhone(e.mobile)}
                       </a>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(e.dateOfJoining)}</td>
-                    <td className="px-4 py-3">
+                    <td data-half data-label="Joined" className="whitespace-nowrap px-4 py-3 text-slate-700">{formatDate(e.dateOfJoining)}</td>
+                    <td data-half data-label="Status" className="px-4 py-3">
                       <StatusPill status={e.status} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td data-half data-label="Login" className="px-4 py-3">
                       <LoginBadge login={e.login} />
                     </td>
-                    <td className="px-2 py-3" onClick={(ev) => ev.stopPropagation()}>
+                    <td data-menu className="px-2 py-3" onClick={(ev) => ev.stopPropagation()}>
                       <OptionsMenu label={`Actions for ${e.fullName}`} items={menu(e)} />
                     </td>
                   </tr>

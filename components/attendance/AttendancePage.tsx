@@ -1,5 +1,7 @@
 "use client";
 
+import { TreePalm } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { EmptyState, ErrorList, LoadingRows, PageContainer, PageHeader, useDebounced, useUserName } from "@/components/crm/ui";
@@ -27,7 +29,7 @@ import { AttendanceBadge, fmtManDays } from "./bits";
 import { HistoryNote, RecordEditor, type ProjectOption } from "./RecordEditor";
 
 const issuesOf = (e: unknown) => (e && typeof e === "object" && "issues" in e ? (e as { issues: string[] }).issues : [e instanceof Error ? e.message : String(e)]);
-const sel = "rounded-md border border-slate-300 bg-white px-2.5 py-2 text-sm";
+const sel = "rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm";
 
 /* ---------- employees (daily sheet) ---------- */
 
@@ -80,7 +82,7 @@ function RemarksCell({ row, editable, onSave }: { row: SheetRow; editable: boole
       onChange={(e) => setText(e.target.value)}
       onBlur={() => text !== (row.record?.remarks ?? "") && onSave(text)}
       placeholder="Remarks"
-      className="w-full min-w-[8rem] rounded-md border border-transparent px-2 py-1 text-xs hover:border-slate-200 focus:border-slate-300"
+      className="w-full min-w-[8rem] rounded-lg border border-transparent px-2 py-1 text-xs hover:border-slate-200 focus:border-slate-300"
     />
   );
 }
@@ -133,12 +135,12 @@ function EmployeesTab({ date, isAdmin, locations }: { date: string; isAdmin: boo
             type="button"
             aria-pressed={status === value}
             onClick={() => setStatus(status === value ? "" : value)}
-            className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-2 ${badge} ${status === value ? "ring-slate-900" : "ring-transparent"}`}
+            className={`rounded-lg px-3 py-1.5 text-sm font-semibold ring-2 ${badge} ${status === value ? "ring-slate-900" : "ring-transparent"}`}
           >
             {label} {n ?? "…"}
           </button>
         ))}
-        {data?.companyHoliday ? <span className="text-sm font-medium text-sky-800">🏖️ Company holiday</span> : null}
+        {data?.companyHoliday ? <span className="text-sm font-medium text-sky-800"><Icon icon={TreePalm} size={14} className="mr-1 inline-block align-[-2px]" />Company holiday</span> : null}
         {isAdmin ? (
           <span className="ml-auto">
             <Button
@@ -149,12 +151,12 @@ function EmployeesTab({ date, isAdmin, locations }: { date: string; isAdmin: boo
                 holiday.mutate(undefined, { onSuccess: (n) => toast(`${n} employees marked Holiday`), onError: (e) => toast(e.message, "error") })
               }
             >
-              🏖️ Mark day as holiday
+              <Icon icon={TreePalm} size={14} className="mr-1 inline-block align-[-2px]" />Mark day as holiday
             </Button>
           </span>
         ) : null}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="filter-bar flex flex-wrap items-center gap-2">
         <input type="search" aria-label="Search employees" placeholder="Search name, employee ID, mobile…" value={search} onChange={(e) => setSearch(e.target.value)} className="min-w-[220px] flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" />
         <select aria-label="Filter by status" value={status} onChange={(e) => setStatus(e.target.value as SheetFilters["status"])} className={sel}>
           <option value="">All statuses</option>
@@ -215,8 +217,8 @@ function EmployeesTab({ date, isAdmin, locations }: { date: string; isAdmin: boo
           <EmptyState title="No employees match." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-sm" data-testid="day-sheet">
-              <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+            <table className="stack-table has-select w-full min-w-[980px] text-sm" data-testid="day-sheet">
+              <thead className="bg-slate-50 text-left text-xs text-slate-500">
                 <tr>
                   <th className="w-10 px-3 py-2">
                     <input
@@ -257,9 +259,12 @@ function EmployeesTab({ date, isAdmin, locations }: { date: string; isAdmin: boo
                       )}
                       <span className="block text-xs text-slate-500">{r.code}</span>
                     </td>
-                    <td className="px-3 py-2 text-slate-700">
+                    <td className="px-3 py-2 text-slate-700 max-md:-mt-1.5 max-md:text-xs max-md:text-slate-500">
                       {r.designation}
-                      <span className="block text-xs text-slate-500">{r.department}</span>
+                      <span className="block text-xs text-slate-500 max-md:inline">
+                        <span className="md:hidden"> · </span>
+                        {r.department}
+                      </span>
                     </td>
                     <td className="px-3 py-2">
                       <RecordEditor
@@ -274,7 +279,7 @@ function EmployeesTab({ date, isAdmin, locations }: { date: string; isAdmin: boo
                         onSave={(patch) => saveRow(r, patch)}
                       />
                     </td>
-                    <td className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
+                    <td data-half data-label="Logged by" className="whitespace-nowrap px-3 py-2 text-xs text-slate-600">
                       {r.record ? (
                         <>
                           {userName(r.record.loggedBy)} · {new Date(r.record.loggedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
@@ -326,7 +331,7 @@ function CasualEditDialog({ worker, onClose }: { worker: CasualWorker; onClose: 
         </>
       }
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextField label="Name" required value={f.name} onChange={(name) => setF({ ...f, name })} />
         <Select label="Trade *" value={f.trade} onChange={(trade) => setF({ ...f, trade })} options={[{ value: "", label: "Choose…" }, ...trades.items]} />
         <TextField label="Mobile" value={f.mobile} onChange={(mobile) => setF({ ...f, mobile })} />
@@ -394,9 +399,9 @@ function CasualTab({ date, isAdmin }: { date: string; isAdmin: boolean }) {
         ) : !rows.length ? (
           <EmptyState title="No casual workers logged on this day." />
         ) : (
-          <div className="-mx-5 overflow-x-auto">
-            <table className="w-full min-w-[720px] text-sm" data-testid="casual-day">
-              <thead className="text-left text-xs uppercase tracking-wide text-slate-500">
+          <div className="-mx-4 overflow-x-auto sm:-mx-6">
+            <table className="stack-table w-full min-w-[720px] text-sm" data-testid="casual-day">
+              <thead className="text-left text-xs text-slate-500">
                 <tr>
                   <th className="px-5 py-1.5">Worker</th>
                   <th className="px-2">Project</th>
@@ -409,15 +414,15 @@ function CasualTab({ date, isAdmin }: { date: string; isAdmin: boolean }) {
                 {rows.map((r) => (
                   <tr key={r.record.id}>
                     <td className="px-5 py-2 font-medium">{r.worker.name}</td>
-                    <td className="px-2 text-slate-700">
-                      <Link href={`/projects/${r.record.projectId}/attendance`} className="hover:underline">
+                    <td data-label="Project" className="px-2 text-slate-700">
+                      <Link href={`/projects/${r.record.projectId}/attendance`} className="ref-code hover:underline">
                         {r.projectCode}
                       </Link>{" "}
                       <span className="text-xs text-slate-500">{r.projectName}</span>
                     </td>
-                    <td className="px-2">{trades.label(r.worker.trade)}</td>
-                    <td className="px-2 text-slate-600">{r.worker.contractor || "–"}</td>
-                    <td className="px-2">
+                    <td data-half data-label="Trade" className="px-2">{trades.label(r.worker.trade)}</td>
+                    <td data-half data-label="Contractor" className="px-2 text-slate-600">{r.worker.contractor || "–"}</td>
+                    <td data-menu className="px-2">
                       <AttendanceBadge status={r.record.status} />
                     </td>
                   </tr>
@@ -497,8 +502,8 @@ function RegisterTab() {
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-3">
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Month</span>
-          <input type="month" aria-label="Register month" value={month} max={todayIso().slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+          <span className="mb-1 block text-xs font-semibold text-slate-600">Month</span>
+          <input type="month" aria-label="Register month" value={month} max={todayIso().slice(0, 7)} onChange={(e) => e.target.value && setMonth(e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         </label>
         <Button disabled={!rows.length} onClick={exportCsv}>
           Export CSV (for payroll)
@@ -530,7 +535,7 @@ function RegisterTab() {
                     <Link href={`/employees/${r.employeeId}/attendance`} className="font-medium text-slate-900 hover:underline">
                       {r.name}
                     </Link>
-                    <span className="block text-[10px] text-slate-500">{r.code}</span>
+                    <span className="block text-[11px] text-slate-500">{r.code}</span>
                   </td>
                   {dates.map((d) => {
                     const v = r.days[d];
@@ -557,7 +562,7 @@ function RegisterTab() {
 
 /* ---------- page ---------- */
 
-/** Attendance page (☰ menu): daily sheet of all employees for Admins and factory / office supervisors. */
+/** Attendance page (menu): daily sheet of all employees for Admins and factory / office supervisors. */
 export function AttendancePage() {
   const { data: access, isPending, error } = useAttendanceAccess();
   const [today, setToday] = useState(() => todayIso());
@@ -592,7 +597,7 @@ export function AttendancePage() {
         <Button aria-label="Previous day" onClick={() => setDate(addDays(date, -1))}>
           ‹
         </Button>
-        <input type="date" aria-label="Attendance date" value={date} max={today} onChange={(e) => e.target.value && setDate(e.target.value > today ? today : e.target.value)} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
+        <input type="date" aria-label="Attendance date" value={date} max={today} onChange={(e) => e.target.value && setDate(e.target.value > today ? today : e.target.value)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm" />
         <Button aria-label="Next day" disabled={date >= today} onClick={() => setDate(addDays(date, 1))}>
           ›
         </Button>
@@ -607,7 +612,7 @@ export function AttendancePage() {
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900" data-testid="sites-not-logged">
           <b>Sites not logged {date === today ? "yet today" : `on ${dayLabel(date)}`}:</b>
           {notLogged.map((p) => (
-            <Link key={p.projectId} href={`/projects/${p.projectId}/attendance`} className="rounded-full bg-white px-2.5 py-0.5 font-medium ring-1 ring-red-200 hover:bg-red-100">
+            <Link key={p.projectId} href={`/projects/${p.projectId}/attendance`} className="rounded-lg bg-white px-2.5 py-0.5 font-medium ring-1 ring-red-200 hover:bg-red-100">
               {p.code} {p.name}
             </Link>
           ))}
@@ -629,7 +634,7 @@ export function AttendancePage() {
               role="tab"
               aria-selected={tab === k}
               onClick={() => setTab(k)}
-              className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
+              className={`rounded-lg px-4 py-1.5 text-sm font-medium ${tab === k ? "bg-red-700 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
             >
               {l}
             </button>

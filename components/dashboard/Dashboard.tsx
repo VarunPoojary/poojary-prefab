@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowDownWideNarrow, ArrowUpNarrowWide, Layers, Plus, Search } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -52,11 +54,11 @@ function useDebounced<T>(value: T, ms = 300) {
 function StatusBadge({ status }: { status: QuotationSummary["status"] }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase ${
+      className={`inline-flex rounded-lg px-2 py-0.5 text-[11px] font-semibold ${
         status === "final" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
       }`}
     >
-      {status}
+      {status === "final" ? "Final" : "Draft"}
     </span>
   );
 }
@@ -148,30 +150,35 @@ export function Dashboard() {
   return (
     <div className="bg-slate-50">
       <div className="sticky top-0 z-20 border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-6 py-3">
-          <h1 className="text-lg font-semibold text-slate-900">Quotations</h1>
-          <div className="relative min-w-[240px] flex-1">
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">⌕</span>
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6 lg:px-8">
+          <h1 className="order-1 text-[22px] font-medium leading-tight text-slate-900">Quotations</h1>
+          <div className="relative order-3 w-full sm:order-2 sm:w-auto sm:min-w-[240px] sm:flex-1">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+              <Icon icon={Search} />
+            </span>
             <input
               type="search"
               aria-label="Search quotations"
-              placeholder="Search by offer no., client, contact, subject, site or enquiry no.…"
+              placeholder="Search quotations"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-red-600 focus:ring-2 focus:ring-red-100"
+              className="h-10 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-slate-400 focus:border-red-700 focus:ring-3 focus:ring-red-700/10"
             />
           </div>
-          <Button variant="primary" onClick={() => setShowNew(true)}>
-            + New quotation
-          </Button>
+          <div className="order-2 ml-auto sm:order-3">
+            <Button variant="primary" onClick={() => setShowNew(true)}>
+              <Icon icon={Plus} />
+              New quotation
+            </Button>
+          </div>
         </div>
       </div>
 
-      <main className="mx-auto max-w-7xl px-6 py-6">
-        <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div className="filter-bar mb-4 flex flex-wrap items-center gap-2 text-sm">
           <FilterSelect
             label="Filter by status"
             value={status ?? "all"}
@@ -211,7 +218,7 @@ export function Dashboard() {
               ["unlinked", "Unlinked"],
             ]}
           />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1" data-span>
             <FilterSelect
               label="Sort by"
               value={sort}
@@ -228,9 +235,9 @@ export function Dashboard() {
               aria-label={dir === "asc" ? "Ascending" : "Descending"}
               title={dir === "asc" ? "Ascending" : "Descending"}
               onClick={() => setDir(dir === "asc" ? "desc" : "asc")}
-              className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-slate-700 hover:bg-slate-50"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
             >
-              {dir === "asc" ? "↑" : "↓"}
+              <Icon icon={dir === "asc" ? ArrowUpNarrowWide : ArrowDownWideNarrow} />
             </button>
           </div>
           {filtersActive ? (
@@ -238,7 +245,7 @@ export function Dashboard() {
               Clear filters
             </button>
           ) : null}
-          <span className="ml-auto text-xs text-slate-500">
+          <span className="ml-auto text-xs tabular-nums text-slate-500" data-span>
             {isFetching && !isPending ? "Refreshing… " : ""}
             {data ? `${data.total} quotation${data.total === 1 ? "" : "s"}` : ""}
           </span>
@@ -275,7 +282,7 @@ export function Dashboard() {
                   <p className="mt-1 text-sm text-slate-500">Create your first quotation to get started.</p>
                   <div className="mt-4">
                     <Button variant="primary" onClick={() => setShowNew(true)}>
-                      + New quotation
+                      <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> New quotation
                     </Button>
                   </div>
                 </>
@@ -283,18 +290,18 @@ export function Dashboard() {
             </div>
           ) : (
             <>
-              <table className="hidden w-full text-sm md:table">
-                <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <table className="hidden w-full text-sm lg:table">
+                <thead className="bg-slate-50 text-left text-xs font-medium text-slate-500">
                   <tr>
-                    <th className="px-4 py-3">Offer / Rev</th>
-                    <th className="px-4 py-3">Client</th>
-                    <th className="px-4 py-3">Subject</th>
-                    <th className="px-4 py-3">Enquiry</th>
-                    <th className="px-4 py-3">Site</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3 text-right">Amount</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Updated</th>
+                    <th className="whitespace-nowrap px-4 py-3 font-medium">Offer / Rev</th>
+                    <th className="min-w-44 px-4 py-3 font-medium">Client</th>
+                    <th className="min-w-48 px-4 py-3 font-medium">Subject</th>
+                    <th className="px-4 py-3 font-medium">Enquiry</th>
+                    <th className="hidden px-4 py-3 font-medium 2xl:table-cell">Site</th>
+                    <th className="px-4 py-3 font-medium">Date</th>
+                    <th className="px-4 py-3 text-right font-medium">Amount</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="hidden px-4 py-3 font-medium xl:table-cell">Updated</th>
                     <th className="w-12 px-2 py-3" />
                   </tr>
                 </thead>
@@ -304,10 +311,10 @@ export function Dashboard() {
                       key={s.id}
                       data-testid="quotation-row"
                       onClick={() => router.push(`/quotations/${s.id}`)}
-                      className={`cursor-pointer hover:bg-red-50/40 ${busyId === s.id ? "opacity-50" : ""}`}
+                      className={`cursor-pointer transition-colors hover:bg-slate-50 ${busyId === s.id ? "opacity-50" : ""}`}
                     >
-                      <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-900">
-                        {s.offerNo || "–"} <span className="font-normal text-slate-500">/ {s.revision || "–"}</span>
+                      <td className="ref-code whitespace-nowrap px-4 py-3 font-medium text-slate-900">
+                        {s.offerNo || "–"} <span className="font-normal text-slate-400">/ {s.revision || "–"}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium text-slate-900">{s.client || <i className="text-slate-400">No client</i>}</div>
@@ -315,36 +322,36 @@ export function Dashboard() {
                       </td>
                       <td className="max-w-xs px-4 py-3">
                         <div className="line-clamp-2 text-slate-700">{s.subject}</div>
-                        <div className="text-[11px] uppercase text-slate-400">{s.pricingMode === "boq" ? "BOQ" : "Area-based"}</div>
+                        <div className="mt-0.5 text-xs text-slate-500">{s.pricingMode === "boq" ? "BOQ" : "Area-based"}</div>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3">
                         {s.enquiryId ? (
                           <>
-                            <div className="text-slate-800">{s.enquiryNumber}</div>
-                            <div className="text-[11px] font-semibold text-slate-500">
+                            <div className="ref-code text-slate-800">{s.enquiryNumber}</div>
+                            <div className="mt-0.5 text-xs text-slate-500">
                               R{s.enquiryRevision}
                               {projectByQuote.get(s.id) ? (
-                                <span title={`Project ${projectByQuote.get(s.id)!.code} is based on this quotation`} className="ml-1 rounded-full bg-sky-100 px-1.5 text-sky-800">
-                                  🏗️ {projectByQuote.get(s.id)!.code}
+                                <span title={`Project ${projectByQuote.get(s.id)!.code} is based on this quotation`} className="ref-code ml-1 inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 text-slate-700">
+                                  <Icon icon={Layers} size={12} />{projectByQuote.get(s.id)!.code}
                                 </span>
                               ) : null}
                             </div>
                           </>
                         ) : (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
+                          <span className="text-xs text-slate-400">
                             Unlinked
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-slate-700">{s.siteLocation || "–"}</td>
-                      <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatLongDate(s.date)}</td>
+                      <td className="hidden px-4 py-3 text-slate-700 2xl:table-cell">{s.siteLocation || "–"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-slate-700">{formatLongDate(s.date)}</td>
                       <td className="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums text-slate-900">
                         {formatRupee(s.grandTotal)}
                       </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={s.status} />
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-xs text-slate-500">{relativeTime(s.updatedAt)}</td>
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-xs text-slate-500 xl:table-cell">{relativeTime(s.updatedAt)}</td>
                       <td className="px-2 py-3">
                         <OptionsMenu label={`Options for ${label(s)}`} items={menuFor(s)} />
                       </td>
@@ -352,13 +359,13 @@ export function Dashboard() {
                   ))}
                 </tbody>
               </table>
-              <ul className="divide-y divide-slate-100 md:hidden">
+              <ul className="divide-y divide-slate-100 lg:hidden">
                 {data.items.map((s) => (
-                  <li key={s.id} className="flex items-start gap-3 px-4 py-3" onClick={() => router.push(`/quotations/${s.id}`)}>
+                  <li key={s.id} className="flex cursor-pointer items-start gap-3 px-4 py-3 transition-colors active:bg-slate-50" onClick={() => router.push(`/quotations/${s.id}`)}>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900">
-                          {s.offerNo} / {s.revision}
+                        <span className="ref-code font-medium text-slate-900">
+                          {s.offerNo} <span className="text-slate-400">/ {s.revision}</span>
                         </span>
                         <StatusBadge status={s.status} />
                       </div>
@@ -419,13 +426,13 @@ export function Dashboard() {
       {linkFor ? <LinkToEnquiryDialog quotation={linkFor} onClose={() => setLinkFor(null)} /> : null}
 
       <Modal open={showNew} onClose={() => setShowNew(false)} title="New quotation – choose a starting point" wide>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PRESETS.map((p) => (
             <button
               key={p.key}
               type="button"
               onClick={() => router.push(`/quotations/new?from=${p.key}`)}
-              className="rounded-xl border border-slate-200 p-4 text-left transition hover:border-red-400 hover:bg-red-50/40"
+              className="rounded-xl border border-slate-200 p-4 text-left transition-colors hover:border-red-400 hover:bg-slate-50"
             >
               <div className="text-sm font-semibold text-slate-900">{p.label}</div>
               <div className="mt-1 text-xs text-slate-500">{p.description}</div>
@@ -488,7 +495,7 @@ function FilterSelect({
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-700"
+      className="h-10 min-w-0 rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-700"
     >
       {options.map(([v, l]) => (
         <option key={v} value={v}>

@@ -8,6 +8,7 @@ A web app for running Poojary Prefab Pvt. Ltd.: from the first client enquiry, t
 | Quotation Maker | Quotation Maker | Admin, Staff | Step-by-step quotation form with live preview and PDF on the letterhead |
 | CRM | Enquiries, Clients | Admin, Staff | Clients with contacts; enquiries from first call to Finalised / Declined |
 | Projects | Projects, My tasks | Admin, Staff (own team) | Auto-created from Finalised enquiries; details, money, progress, timeline |
+| Dashboards | Factory dashboard, Site dashboard | Admin, roles given these pages | All projects' factory work by priority; every site's progress, delays, crews and daily updates (no money) |
 | Attendance | Attendance (+ project / employee tabs) | Admin, supervisors, site managers | Daily attendance at sites, factory and office; casual workers |
 | Expenses | Expenses (+ project tab) | Admin, Accountant, site managers | Request → accept → pay; budget vs actual |
 | Payroll | Payroll (+ employee tab) | Admin, Accountant | Salary from attendance, advances, close month, settle all, salary slips |
@@ -52,7 +53,8 @@ After pulling new code, restart `npm run dev` (new pages) and use **Reset demo d
 1. Create a project at [supabase.com](https://supabase.com) (region close to India, e.g. Mumbai).
 2. **Create the tables:** Supabase dashboard → *SQL Editor* → paste and run
    [`supabase/migrations/20261124000000_init.sql`](supabase/migrations/20261124000000_init.sql), then
-   [`supabase/migrations/20261124000001_grants.sql`](supabase/migrations/20261124000001_grants.sql) (or `supabase db push`
+   [`supabase/migrations/20261124000001_grants.sql`](supabase/migrations/20261124000001_grants.sql), then
+   [`supabase/migrations/20261128000000_custom_roles.sql`](supabase/migrations/20261128000000_custom_roles.sql) (or `supabase db push`
    with the Supabase CLI). They create `app_records`, `file_meta`, the table privileges, the row level security
    policies, realtime and the private Storage bucket `files`. *permission denied for table app_records* means the
    second file has not been run.
@@ -113,6 +115,22 @@ What the demo data contains (dates are relative to today):
 
 ## Roles & permissions
 
+**Custom roles.** Admins manage roles in **Settings → Roles and access**: add, rename or delete a role and tick the
+pages it can open (Enquiries, Clients, Quotation Maker, Projects, My tasks, Attendance, Payroll, Expenses). Give a
+person a role on their employee page → **Application login → Role**.
+
+- **Admin** is built in: every page, and the only role that manages Employees, Settings and roles. It can't be edited
+  or deleted.
+- **Staff** and **Accountant** are the starting roles (the columns below); they can be edited like any other role.
+- Inside a page, every non-Admin role works like the Staff column below, except:
+  a role with **Payroll** does what the Accountant column shows for payroll (including an employee's Payroll tab);
+  a role with **Expenses** sees all expenses and marks accepted ones as paid;
+  a role with **Attendance** marks factory and office attendance like a supervisor of both (last 7 days).
+- Everything marked Admin-only below stays Admin-only for every custom role.
+- A role still given to a login can't be deleted; change those people's role first.
+
+The starting roles:
+
 | Action | Admin | Staff | Accountant |
 |---|---|---|---|
 | Quotations, Clients, Enquiries | ✔ | ✔ | ✘ |
@@ -134,7 +152,7 @@ What the demo data contains (dates are relative to today):
 
 Permission checks run in the app. With Supabase the database also enforces the coarse rules (row level security):
 only enabled logins can read or change anything; logins, employees, lookups and settings only admins; payroll only
-admins and the Accountant. The finer rules (team membership, the 7-day window, …) are not yet enforced by the database
+admins and roles with the Payroll page (needs `20261128000000_custom_roles.sql`). The finer rules (team membership, the 7-day window, …) are not yet enforced by the database
 – see [Architecture & data](#architecture--data).
 
 ---
@@ -231,6 +249,28 @@ admins and the Accountant. The finer rules (team membership, the 7-day window, �
   labour for the last 7 days and productivity per task.
 - **Expenses tab** and **Attendance tab** – see below.
 - **My tasks** (`/my-tasks`): your open tasks, behind-schedule first, with *+ Update*.
+
+#### Factory dashboard (`/factory`) and Site dashboard (`/sites`)
+
+Read-only overviews across **all** active (and on-hold) projects for anyone whose role has the page (Settings →
+Roles and access). Neither shows money. Calculations live in `lib/dashboards/` (pure functions, unit-tested).
+
+- **Factory dashboard** – projects whose factory stage is below 100%, as a **priority queue**: pinned projects first
+  (*Pin to top* with a reason, visible to all), then blocked, behind, at risk, then the least spare time before the
+  **dispatch-by** date (transport planned start, else factory planned end). Each project shows factory % against the
+  planned % for today, steel to finish (MT, averaged over the MT processes because the same steel passes through
+  each), MT/week achieved (last 4 weeks) vs needed, spare days at that rate, last update and last delay reason, and
+  its factory tasks. Side panels: pending work per process (where work piles up), steel finished per week (6 weeks)
+  against the rate needed, factory tasks due in 14 days, and factory delay reasons (90 days) by days lost.
+  *At risk* = 7 days or less to spare, needing over 25% more than the current rate, or nothing produced for 4 weeks
+  with dispatch within 3 weeks.
+- **Site dashboard** – **Daily updates**: for each active site with attendance on, today's *attendance* and
+  *progress* (at least one update) and a 7-day strip (both / one / neither / still time / holiday), with *Log
+  attendance* / *Post progress* links. **Site cards**, most behind first: overall % vs planned % today, each stage's
+  % vs plan, planned vs expected finish, % per day achieved (7 days) vs needed, people on site today vs 7-day average
+  (flagged when a behind site has fewer people than usual), progress per man-day, late or blocked tasks, open delay
+  reasons. Side panels: crew today, site tasks due in 14 days, site delay reasons (90 days), stages late without a
+  delay reason. *My sites only* is on by default for people on a site's team (off for Admin).
 
 ### 5. Attendance
 
@@ -355,6 +395,7 @@ related page.
 | 💰 | Payment milestone overdue | Admins |
 | ⚠️ | Finalised enquiry reopened | Admins |
 | 🗓️ | Site attendance not logged (reminder time / 10:00 next day) | Site managers (+ Admins next day) |
+| ☑️ | No progress posted on a site day (same timing; site and company holidays skipped) | Site managers (+ Admins next day) |
 | 💸 | Expense requested | Admins |
 | 🧾 | Expense accepted / paid / rejected | The requester |
 | 📊 | Work stage spend reached 80 % / 100 % of budget | Admins |
@@ -552,6 +593,9 @@ in as, the steps and the expected result (✅). To switch user: avatar → **Log
 |---|---|---|---|
 | K1 | Admin | Open 🔔 | Unread dots; clicking an item opens its page and marks it read; *Mark all read* clears the count |
 | K2 | Any site manager | 🔔 → *Turn on pop-up reminders* → allow | Attendance reminders also pop up as browser notifications |
+| K3 | Admin | ☰ → *Factory dashboard* | Godown at Sanaswadi first (Behind, raw-material / plant-capacity delays); *Pin to top* Talegaon with a reason → it moves to 01; *Unpin* → back |
+| K4 | Admin | ☰ → *Site dashboard* | Nagpur and Sanaswadi in *Daily updates* with a 7-day strip; post a progress update on Nagpur → *Progress posted* for today |
+| K5 | Admin, then Accountant | Settings → Roles → tick *Factory dashboard* for Accountant → sign in as accounts@poojary.net | Menu shows Factory dashboard; no ₹ anywhere; `/sites` shows *No access* |
 
 ### L. Phone checks (narrow window ≈ 390 px or a real phone)
 

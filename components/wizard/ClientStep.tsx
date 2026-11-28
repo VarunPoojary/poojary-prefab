@@ -24,7 +24,7 @@ export function ClientStep() {
           }
           onClear={() => update((d) => void delete d.client.clientId)}
         />
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             label="Client company name"
             required
@@ -55,7 +55,7 @@ export function ClientStep() {
       </Card>
 
       <Card title="Offer">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <TextField
             label="Offer No"
             required
@@ -94,7 +94,7 @@ export function ClientStep() {
               <option key={s} value={s} />
             ))}
           </datalist>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <TextField
               label="Site location"
               value={q.meta.siteLocation}

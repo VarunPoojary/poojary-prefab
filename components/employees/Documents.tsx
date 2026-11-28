@@ -12,6 +12,8 @@ import { useAddDocument, useRemoveDocument } from "@/lib/employees/hooks";
 import type { NewDocument } from "@/lib/employees/repository";
 import type { DocumentSlot, Employee } from "@/lib/employees/types";
 import { formatBytes, formatDate } from "@/lib/format";
+import { FileText, Upload } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 async function readDocument(file: File, slot: DocumentSlot): Promise<NewDocument> {
   if (!DOCUMENT_TYPES.includes(file.type)) throw new Error(`${file.name}: only PDF, JPG or PNG files are allowed.`);
@@ -49,7 +51,7 @@ function Uploader({ onDocs, onError, disabled }: { onDocs: (d: NewDocument[]) =>
         }}
       />
       <Button disabled={disabled} onClick={() => ref.current?.click()}>
-        ⬆ Upload
+        <Icon icon={Upload} size={14} className="mr-1 inline-block align-[-2px]" />Upload
       </Button>
     </div>
   );
@@ -73,7 +75,7 @@ export function PendingDocuments({ docs, onChange }: { docs: NewDocument[]; onCh
         {docs.map((d, i) => (
           <li key={`${d.name}-${i}`} className="flex items-center justify-between py-2">
             <span>
-              📄 {d.name} <span className="text-xs text-slate-500">· {labelOf(DOCUMENT_SLOTS, d.slot)} · {formatBytes(d.size)}</span>
+              <Icon icon={FileText} size={14} className="mr-1 inline-block align-[-2px]" />{d.name} <span className="text-xs text-slate-500">· {labelOf(DOCUMENT_SLOTS, d.slot)} · {formatBytes(d.size)}</span>
             </span>
             <Button size="sm" variant="danger" onClick={() => onChange(docs.filter((_, j) => j !== i))}>
               Remove
@@ -124,7 +126,7 @@ export function DocumentsEditor({ employee, readOnly }: { employee: Employee; re
             <li key={d.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
               <div className="min-w-0">
                 <span className="flex items-center gap-1 font-medium text-slate-900">
-                  📄 <FileLink file={d} />
+                  <Icon icon={FileText} size={14} className="mr-1 inline-block align-[-2px]" /><FileLink file={d} />
                 </span>
                 <div className="text-xs text-slate-500">
                   {labelOf(DOCUMENT_SLOTS, d.slot)} · {formatBytes(d.size)} · {formatDate(d.uploadedAt)} by {userName(d.uploadedBy)}

@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useState } from "react";
 import {
   Button,
@@ -53,7 +55,7 @@ export function PricingStep() {
   return (
     <div className="space-y-5">
       <Card title="Pricing format" description="Choose the table layout that suits this project.">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {(
             [
               ["boq", "BOQ – Supply + Installation", "Item-wise quantity with separate supply and installation rates (steel, roofing, gutters…)."],
@@ -64,7 +66,7 @@ export function PricingStep() {
               key={value}
               type="button"
               onClick={() => update((d) => switchMode(d, value))}
-              className={`rounded-lg border p-4 text-left transition ${
+              className={`rounded-lg border p-4 text-left transition-colors ${
                 q.pricing.mode === value ? "border-red-700 bg-red-50 ring-2 ring-red-100" : "border-slate-200 hover:border-slate-300"
               }`}
             >
@@ -80,7 +82,7 @@ export function PricingStep() {
       </Card>
 
       <Card title="Tax & intro">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <NumberField
             label="GST rate"
             suffix="%"
@@ -137,7 +139,7 @@ function BoqEditor() {
           onChange={(v) => update((d) => void (d.pricing.boq.heading = v))}
           onReset={boq.heading !== BOQ_HEADING ? () => update((d) => void (d.pricing.boq.heading = BOQ_HEADING)) : undefined}
         />
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             label="Supply column label"
             value={boq.supplyLabel}
@@ -155,10 +157,10 @@ function BoqEditor() {
         title={`BOQ items (${boq.items.length})`}
         description="Sr. No. and amounts are calculated automatically. Leave a rate empty if it doesn't apply."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center gap-2 sm:w-auto">
             <select
               aria-label="Item from library"
-              className="rounded-md border border-slate-300 px-2 py-2 text-sm"
+              className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white pl-2.5 text-sm sm:max-w-[16rem] sm:flex-none"
               value={libKey}
               onChange={(e) => setLibKey(e.target.value)}
             >
@@ -169,7 +171,7 @@ function BoqEditor() {
               ))}
             </select>
             <Button variant="primary" onClick={() => update((d) => void d.pricing.boq.items.push(libraryBoqItem(libKey)))}>
-              + Add item
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add item
             </Button>
           </div>
         }
@@ -194,7 +196,7 @@ function BoqEditor() {
                     onRemove={() => update((x) => void x.pricing.boq.items.splice(i, 1))}
                   />
                 </div>
-                <div className="grid gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
                   <TextField
                     className="sm:col-span-3"
                     label="Item title"
@@ -232,7 +234,7 @@ function BoqEditor() {
                     onChange={(v) => set((x) => void (x.installRate = v))}
                   />
                   <div className="flex items-end">
-                    <div className="w-full rounded-md bg-white px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-200">
+                    <div className="w-full rounded-lg bg-white px-3 py-1.5 text-xs text-slate-600 ring-1 ring-slate-200">
                       <div className="flex justify-between gap-2">
                         <span>Supply</span>
                         <span className="font-semibold tabular-nums text-slate-900">{formatINR(c.supplyAmount) || "–"}</span>
@@ -254,7 +256,7 @@ function BoqEditor() {
       <Card title="Totals">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-xs uppercase text-slate-500">
+            <tr className="text-left text-xs text-slate-500">
               <th className="py-1" />
               <th className="py-1 text-right">Supply</th>
               <th className="py-1 text-right">Installation</th>
@@ -293,7 +295,7 @@ function AreaEditor() {
   return (
     <>
       <Card title="Table settings">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <TextField
             className="sm:col-span-2"
             label="Table title (optional override)"
@@ -328,14 +330,14 @@ function AreaEditor() {
         description={`Total area = area × units, Amount = rate × units, Rate per ${area.unit === "ft2" ? "SQF" : "SQM"} = amount ÷ total area.`}
         actions={
           <Button variant="primary" onClick={() => update((d) => void d.pricing.area.rows.push(emptyAreaRow()))}>
-            + Add structure
+            <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add structure
           </Button>
         }
       >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-sm">
+          <table className="stack-table stack-flush w-full min-w-[860px] text-sm max-md:divide-y max-md:divide-slate-100">
             <thead>
-              <tr className="text-left text-xs uppercase text-slate-500">
+              <tr className="text-left text-xs text-slate-500">
                 <th className="w-8 py-2">#</th>
                 <th className="py-2">Structure name</th>
                 <th className="w-28 py-2">Area/unit ({unit})</th>
@@ -353,25 +355,25 @@ function AreaEditor() {
                 const set = (fn: (x: AreaRow) => void) => update((d) => fn(d.pricing.area.rows[i]));
                 return (
                   <tr key={r.id} className="border-t border-slate-100 align-top">
-                    <td className="py-2 text-slate-500">{i + 1}</td>
-                    <td className="py-2 pr-2">
+                    <td data-index className="py-2 text-slate-500">{i + 1}</td>
+                    <td data-label="Structure name" className="py-2 pr-2">
                       <TextField value={r.name} placeholder="e.g. Main Office" onChange={(v) => set((x) => void (x.name = v))} />
                     </td>
-                    <td className="py-2 pr-2">
+                    <td data-half data-label={`Area/unit (${unit})`} className="py-2 pr-2">
                       <NumberField value={r.areaPerUnit} onChange={(v) => set((x) => void (x.areaPerUnit = v))} />
                     </td>
-                    <td className="py-2 pr-2">
+                    <td data-half data-label="Units" className="py-2 pr-2">
                       <NumberField value={r.units} onChange={(v) => set((x) => void (x.units = v))} />
                     </td>
-                    <td className="py-2 pr-2">
+                    <td data-half data-label="Rate per unit (₹)" className="py-2 pr-2">
                       {r.notQuoted ? (
                         <div className="px-3 py-2 text-xs italic text-slate-400">Not quoted</div>
                       ) : (
                         <NumberField value={r.ratePerUnit} onChange={(v) => set((x) => void (x.ratePerUnit = v))} />
                       )}
                     </td>
-                    <td className="py-2 text-center">
-                      <div className="pt-2">
+                    <td data-half data-label="Not quoted" className="py-2 text-center">
+                      <div className="pt-2 max-md:pt-1">
                         <Checkbox
                           label=""
                           checked={r.notQuoted}
@@ -379,9 +381,9 @@ function AreaEditor() {
                         />
                       </div>
                     </td>
-                    <td className="py-2 pt-4 text-right tabular-nums">{r.notQuoted ? "–" : formatINR(c.amount)}</td>
-                    <td className="py-2 pt-4 text-right tabular-nums">{r.notQuoted ? "–" : formatINR(c.ratePerArea)}</td>
-                    <td className="py-2 pl-2">
+                    <td data-half data-label="Amount" className="py-2 pt-4 text-right tabular-nums">{r.notQuoted ? "–" : formatINR(c.amount)}</td>
+                    <td data-half data-label={`₹/${area.unit === "ft2" ? "SQF" : "SQM"}`} className="py-2 pt-4 text-right tabular-nums">{r.notQuoted ? "–" : formatINR(c.ratePerArea)}</td>
+                    <td data-menu className="py-2 pl-2">
                       <RowActions
                         index={i}
                         count={area.rows.length}
@@ -423,7 +425,7 @@ function GrandTotal({ amount, label }: { amount: number; label: string }) {
     <div className="mt-4 rounded-lg bg-slate-900 p-4 text-white">
       <div className="flex items-center justify-between">
         <span className="text-sm">{label}</span>
-        <span className="text-xl font-bold tabular-nums">{formatRupee(amount)}</span>
+        <span className="text-xl font-semibold tabular-nums">{formatRupee(amount)}</span>
       </div>
       <div className="mt-1 text-xs text-slate-300">{amountInWords(amount)}</div>
     </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import { useState } from "react";
 import { Button, Card, NumberField, RowActions, TextArea, TextField, Toggle, move } from "@/components/ui/fields";
 import { libraryWorkScope, uid } from "@/lib/defaults";
@@ -36,7 +38,7 @@ export function ScopeStep() {
           )
         }
       >
-        + Add custom text block
+        <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add custom text block
       </Button>
     </div>
   );
@@ -94,7 +96,7 @@ function BlockCard({ block: b, index, count }: { block: ScopeBlock; index: numbe
                 />
               ) : null}
               {b.kind === "steelSpec" ? (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <NumberField
                     label="Minimum coating thickness"
                     suffix="µm"
@@ -154,7 +156,7 @@ function WorkScopeEditor() {
   return (
     <div className="space-y-3">
       {suggestions.map((s) => (
-        <div key={s.key} className="flex items-center justify-between rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <div key={s.key} className="flex items-center justify-between rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
           <span>
             Your BOQ includes items for <b>{s.label}</b>, but the work scope doesn&apos;t mention them yet.
           </span>
@@ -167,7 +169,7 @@ function WorkScopeEditor() {
         <div key={w.id} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
           <div className="flex items-start gap-3">
             <span className="mt-8 text-sm font-semibold text-slate-500">{i + 1}.</span>
-            <div className="flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2">
               <TextField
                 label="Sub-heading"
                 value={w.heading}
@@ -192,7 +194,7 @@ function WorkScopeEditor() {
       <div className="flex items-center gap-2">
         <select
           aria-label="Work scope from library"
-          className="rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white pl-2.5 text-sm sm:max-w-[16rem] sm:flex-none"
           value={libKey}
           onChange={(e) => setLibKey(e.target.value)}
         >
@@ -202,8 +204,8 @@ function WorkScopeEditor() {
             </option>
           ))}
         </select>
-        <Button size="sm" onClick={() => update((d) => void d.scope.workScopeItems.push(libraryWorkScope(libKey)))}>
-          + Add sub-heading
+        <Button onClick={() => update((d) => void d.scope.workScopeItems.push(libraryWorkScope(libKey)))}>
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add sub-heading
         </Button>
       </div>
     </div>

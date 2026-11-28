@@ -4,9 +4,9 @@ import { useState } from "react";
 import { PageContainer, PageHeader } from "@/components/crm/ui";
 import { useToast } from "@/components/Providers";
 import { Card } from "@/components/ui/fields";
-import { ROLE_LABELS } from "@/lib/auth";
 import { useAuth } from "@/lib/auth/AuthProvider";
 import { formatDateTime } from "@/lib/format";
+import { useRoles } from "@/lib/settings/hooks";
 import { ChangePasswordForm } from "./ChangePassword";
 
 /** /account: the signed-in user's own details and password change. */
@@ -14,18 +14,19 @@ export function AccountScreen() {
   const { user, session } = useAuth();
   const toast = useToast();
   const [formKey, setFormKey] = useState(0);
+  const roles = useRoles();
   if (!user) return null;
   const rows: [string, string][] = [
     ["Name", user.name],
     ["Employee ID", user.code],
     ["Username", user.username],
-    ["Role", ROLE_LABELS[user.role]],
+    ["Role", roles.name(user.role)],
     ["Previous sign-in", session?.lastLoginAt ? formatDateTime(session.lastLoginAt) : "This is your first sign-in"],
   ];
   return (
     <PageContainer>
       <PageHeader title="My account" />
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         <Card title="Profile">
           <dl className="space-y-2 text-sm">
             {rows.map(([k, v]) => (

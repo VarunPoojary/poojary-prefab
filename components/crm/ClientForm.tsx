@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -111,14 +113,14 @@ export function ClientForm({
       description="At least one. The primary contact needs a phone number."
       actions={
         <Button size="sm" onClick={() => set({ contacts: [...form.contacts, newContact(form.contacts.length === 0)] })}>
-          + Add contact
+          <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add contact
         </Button>
       }
     >
       <div className="space-y-3">
         {form.contacts.map((c, i) => (
           <div key={c.id} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <TextField label="Name" required value={c.name} onChange={(v) => setContact(i, { name: v })} placeholder="e.g. Mr. Ravi Patil" />
               <Select
                 label="Role"
@@ -175,7 +177,7 @@ export function ClientForm({
   return (
     <div className="space-y-5">
       <Card title="Company">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <TextField
             className="sm:col-span-2"
             label="Client / company name"
@@ -204,7 +206,7 @@ export function ClientForm({
 
       {!compact || form.name ? (
         <Card title="Address & tax">
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <TextField className="sm:col-span-3" label="Company address" value={form.address} onChange={(v) => set({ address: v })} />
             <TextField label="City" value={form.city} onChange={(v) => set({ city: v })} />
             <Select

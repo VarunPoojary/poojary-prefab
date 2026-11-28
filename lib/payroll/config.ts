@@ -19,7 +19,7 @@ export const payTypeLabel = (t: PayrollPaymentType) => PAYMENT_TYPES.find((x) =>
 export const MONTH_STATUSES: Record<MonthStatus, { label: string; badge: string }> = {
   open: { label: "Open", badge: "bg-sky-100 text-sky-900" },
   closed: { label: "Closed", badge: "bg-amber-100 text-amber-900" },
-  partly_paid: { label: "Partly paid", badge: "bg-orange-100 text-orange-900" },
+  partly_paid: { label: "Partly paid", badge: "bg-amber-50 text-amber-900 ring-1 ring-inset ring-amber-300" },
   paid: { label: "Paid", badge: "bg-emerald-100 text-emerald-800" },
   not_in_payroll: { label: "Not in payroll", badge: "bg-slate-100 text-slate-600" },
   before_start: { label: "Before payroll start", badge: "bg-slate-100 text-slate-600" },

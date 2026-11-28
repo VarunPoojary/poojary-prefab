@@ -13,6 +13,8 @@ import type { EnquirySummary } from "@/lib/crm/types";
 import { useQuotationRecord } from "@/lib/data/hooks";
 import { useQuotationStore } from "@/lib/store";
 import { SearchSelect, StatusBadge, useDebounced } from "./ui";
+import { TriangleAlert } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 /** Searchable list of open enquiries (by number, client or project). */
 export function OpenEnquirySearch({ onSelect, autoFocus }: { onSelect: (e: EnquirySummary) => void; autoFocus?: boolean }) {
@@ -115,8 +117,8 @@ export function LinkEnquiryCard() {
             <p className="text-xs text-slate-500">Will be linked as R{enquiry.nextRevision} when the quotation is saved.</p>
           ) : null}
           {mismatch ? (
-            <p className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
-              ⚠ The client on this quotation (“{q.client.company || "none"}”) doesn&apos;t match the enquiry&apos;s client (“{enquiryClient?.name}”).
+            <p className="rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+              <Icon icon={TriangleAlert} size={14} className="mr-1 inline-block align-[-2px]" />The client on this quotation (“{q.client.company || "none"}”) doesn&apos;t match the enquiry&apos;s client (“{enquiryClient?.name}”).
             </p>
           ) : null}
           {record?.enquiryId && !closed ? (
@@ -143,7 +145,7 @@ export function LinkEnquiryCard() {
       ) : (
         <div className="space-y-2">
           {!changing ? (
-            <p className="rounded-md bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
+            <p className="rounded-lg bg-amber-50 px-2 py-1.5 text-xs text-amber-900">
               Not linked to an enquiry – it will show as <b>Unlinked</b> in the quotations list.
             </p>
           ) : null}

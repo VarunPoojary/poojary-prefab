@@ -6,19 +6,18 @@ export interface StageMeta {
   label: string;
   short: string;
   weight: number;
-  icon: string;
   /** Typical share of the schedule [start, end] (0–1) used by "Suggest dates". Stages overlap. */
   span: [number, number];
 }
 
 /** The 6 stages, in order, with the confirmed default weights. */
 export const STAGES: StageMeta[] = [
-  { key: "design", label: "Design finalisation", short: "Design", weight: 10, icon: "📐", span: [0, 0.2] },
-  { key: "factory", label: "Factory work", short: "Factory", weight: 40, icon: "🏭", span: [0.1, 0.6] },
-  { key: "transport", label: "Transportation", short: "Transport", weight: 10, icon: "🚚", span: [0.35, 0.7] },
-  { key: "erection", label: "Assembly and erection", short: "Erection", weight: 30, icon: "🏗️", span: [0.45, 0.9] },
-  { key: "quality", label: "Quality check", short: "Quality", weight: 5, icon: "✅", span: [0.8, 0.95] },
-  { key: "handover", label: "Handover", short: "Handover", weight: 5, icon: "🤝", span: [0.92, 1] },
+  { key: "design", label: "Design finalisation", short: "Design", weight: 10, span: [0, 0.2] },
+  { key: "factory", label: "Factory work", short: "Factory", weight: 40, span: [0.1, 0.6] },
+  { key: "transport", label: "Transportation", short: "Transport", weight: 10, span: [0.35, 0.7] },
+  { key: "erection", label: "Assembly and erection", short: "Erection", weight: 30, span: [0.45, 0.9] },
+  { key: "quality", label: "Quality check", short: "Quality", weight: 5, span: [0.8, 0.95] },
+  { key: "handover", label: "Handover", short: "Handover", weight: 5, span: [0.92, 1] },
 ];
 
 export const stageMeta = (k: StageKey) => STAGES.find((s) => s.key === k)!;
@@ -180,15 +179,15 @@ export const PROJECT_DOC_SLOTS: { value: ProjectDocSlot; label: string }[] = [
   { value: "other", label: "Other" },
 ];
 
-export const EVENT_TYPES: { value: EventType; label: string; icon: string }[] = [
-  { value: "note", label: "Notes", icon: "📝" },
-  { value: "progress", label: "Progress", icon: "📈" },
-  { value: "task", label: "Tasks", icon: "☑️" },
-  { value: "stage", label: "Stages", icon: "🧱" },
-  { value: "detail", label: "Details", icon: "✏️" },
-  { value: "payment", label: "Payments", icon: "💰" },
-  { value: "expense", label: "Expenses", icon: "🧾" },
-  { value: "attendance", label: "Attendance", icon: "👷" },
+export const EVENT_TYPES: { value: EventType; label: string }[] = [
+  { value: "note", label: "Notes" },
+  { value: "progress", label: "Progress" },
+  { value: "task", label: "Tasks" },
+  { value: "stage", label: "Stages" },
+  { value: "detail", label: "Details" },
+  { value: "payment", label: "Payments" },
+  { value: "expense", label: "Expenses" },
+  { value: "attendance", label: "Attendance" },
 ];
 
 /** A task is behind when its straight-line expected % is more than this many points above actual. */

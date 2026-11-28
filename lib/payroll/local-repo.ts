@@ -1,5 +1,6 @@
 import type { LocalAttendanceRepository } from "@/lib/attendance/local-repo";
 import type { AttendanceStatus } from "@/lib/attendance/types";
+import { ADMIN_ROLE, roleHasPage } from "@/lib/auth/roles";
 import type { Role } from "@/lib/auth/types";
 import { CrmNotFoundError, ValidationError } from "@/lib/crm/types";
 import { activeAdminIds } from "@/lib/employees/rules";
@@ -161,7 +162,7 @@ export class LocalPayrollRepository implements PayrollRepository {
   }
   private async payrollUser(): Promise<Actor> {
     const a = await this.actor();
-    if (a.role !== "admin" && a.role !== "accountant") throw new ProjectForbiddenError("Only admins and the accountant can open payroll.");
+    if (!roleHasPage(a.role, "payroll")) throw new ProjectForbiddenError("Your role doesn't include the Payroll page.");
     return a;
   }
   private async admin(): Promise<Actor> {
@@ -171,7 +172,7 @@ export class LocalPayrollRepository implements PayrollRepository {
   }
   async access(): Promise<PayrollAccess> {
     const a = await this.actor();
-    return { canView: a.role === "admin" || a.role === "accountant", isAdmin: a.role === "admin" };
+    return { canView: roleHasPage(a.role, "payroll"), isAdmin: a.role === "admin" };
   }
 
   /* ---------- context ---------- */
@@ -716,7 +717,7 @@ export class LocalPayrollRepository implements PayrollRepository {
     if (!unpaid.length) return;
     const logins = this.o.people.logins();
     const active = new Set(c.employees.filter((e) => e.status === "active").map((e) => e.id));
-    const to = [...new Set([...activeAdminIds(logins, c.employees), ...logins.filter((l) => l.role === "accountant" && l.enabled && active.has(l.employeeId)).map((l) => l.employeeId)])];
+    const to = [...new Set([...activeAdminIds(logins, c.employees), ...logins.filter((l) => l.role !== ADMIN_ROLE && roleHasPage(l.role, "payroll") && l.enabled && active.has(l.employeeId)).map((l) => l.employeeId)])];
     this.o.notifications.push(
       to.map((userId) => ({
         userId,

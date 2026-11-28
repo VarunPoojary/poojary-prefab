@@ -10,7 +10,7 @@ import { validatePassword } from "@/lib/employees/rules";
 import { safeNext } from "@/lib/navigation";
 
 const inputCls =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-[#71090D] focus:ring-2 focus:ring-red-100";
+  "h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base text-slate-900 outline-none transition-[border-color,box-shadow] focus:border-red-700 focus:ring-3 focus:ring-red-700/10 sm:text-sm";
 
 /** Current + new + confirm password form, used for the forced first-login change and My account. */
 export function ChangePasswordForm({ onDone, submitLabel = "Change password" }: { onDone: () => void; submitLabel?: string }) {
@@ -66,7 +66,7 @@ export function ChangePasswordForm({ onDone, submitLabel = "Change password" }: 
         Show passwords
       </label>
       {issues.length ? (
-        <ul id="pw-error" role="alert" className="list-disc space-y-0.5 rounded-md bg-red-50 px-3 py-2 pl-7 text-sm text-red-800">
+        <ul id="pw-error" role="alert" className="list-disc space-y-0.5 rounded-lg bg-red-50 px-3 py-2 pl-7 text-sm text-red-800">
           {issues.map((i) => (
             <li key={i}>{i}</li>
           ))}
@@ -75,7 +75,7 @@ export function ChangePasswordForm({ onDone, submitLabel = "Change password" }: 
       <button
         type="submit"
         disabled={saving}
-        className="flex w-full items-center justify-center rounded-lg bg-[#71090D] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#5a070a] disabled:opacity-70"
+        className="flex h-11 w-full items-center justify-center rounded-lg bg-red-900 px-4 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] transition-[background-color,transform] hover:bg-red-800 active:scale-[0.98] disabled:opacity-70"
       >
         {saving ? "Saving…" : submitLabel}
       </button>
@@ -101,14 +101,14 @@ export function ForcedPasswordChange() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-red-50 px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-slate-50 px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={COMPANY.assets.logoMark} alt="" className="h-14 w-auto" />
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="text-lg font-semibold text-slate-900">Choose your password</h1>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+          <h1 className="text-[22px] font-medium text-slate-900">Choose your password</h1>
           <p className="mb-5 mt-1 text-sm text-slate-500">
             Welcome, {user?.name}. You signed in with a temporary password; set your own to continue. Only you will know it.
           </p>

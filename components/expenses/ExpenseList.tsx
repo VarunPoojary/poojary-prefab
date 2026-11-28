@@ -49,7 +49,7 @@ export function ExpenseDetail({ e, rights, onEdit }: { e: Expense; rights: Expen
 
   return (
     <div className="space-y-3 border-t border-slate-100 bg-slate-50/50 px-4 pb-4 pt-3 text-sm" data-testid="expense-detail">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <dl>
           {row("Expense ID", e.code)}
           {row("Date", formatDate(e.date))}
@@ -67,7 +67,7 @@ export function ExpenseDetail({ e, rights, onEdit }: { e: Expense; rights: Expen
           {e.deleteReason ? row("Delete reason", <span className="text-red-700">{e.deleteReason}</span>) : null}
         </dl>
         <div>
-          <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">History</h5>
+          <h5 className="mb-1 text-xs font-semibold text-slate-500">History</h5>
           <ul className="space-y-1.5 text-xs" data-testid="expense-history">
             {e.history.map((h, i) => (
               <li key={i}>
@@ -85,7 +85,7 @@ export function ExpenseDetail({ e, rights, onEdit }: { e: Expense; rights: Expen
           </ul>
           {e.casual ? (
             <div className="mt-3">
-              <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Casual workers ({e.casual.lines.length})</h5>
+              <h5 className="mb-1 text-xs font-semibold text-slate-500">Casual workers ({e.casual.lines.length})</h5>
               <ul className="text-xs text-slate-700">
                 {e.casual.lines.map((l) => (
                   <li key={l.workerId}>
@@ -182,14 +182,14 @@ export function ExpenseRow({
         <button type="button" aria-expanded={open} onClick={onToggle} className="grid min-w-0 flex-1 grid-cols-[1fr_auto] items-start gap-x-3 gap-y-1 text-left text-sm md:grid-cols-[6.5rem_1fr_11rem_8rem_6rem]">
           <span className="text-xs text-slate-500 md:text-sm md:text-slate-700">
             {formatDate(e.date)}
-            <span className="block text-[11px] text-slate-400">{e.code}</span>
+            <span className="ref-code block text-xs text-slate-500">{e.code}</span>
           </span>
           <span className="col-span-2 min-w-0 md:col-span-1">
             <span className="block truncate font-medium text-slate-900">{e.description}</span>
             <span className="block truncate text-xs text-slate-500">
               {projectLabel ? `${projectLabel} · ` : ""}
               {e.paidTo} · by {userName(e.requestedBy)}
-              {e.bill ? " · 🧾" : ""}
+              {e.bill ? " · bill attached" : ""}
             </span>
           </span>
           <span className="text-xs text-slate-600">{cats.label(e.category)}</span>

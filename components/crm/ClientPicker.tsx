@@ -1,5 +1,7 @@
 "use client";
 
+import { Plus } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/fields";
@@ -81,7 +83,7 @@ export function ClientPicker({
           }}
           footer={
             <Link href="/clients/new" target="_blank" className="text-xs font-medium text-red-700 hover:underline">
-              + Add a new client (opens in a new tab)
+              <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Add a new client (opens in a new tab)
             </Link>
           }
         />

@@ -94,7 +94,7 @@ describe("navigation", () => {
   });
 
   it("shows Employees to admins only", () => {
-    expect(visibleNavItems({ role: "admin" }).map((i) => i.key)).toEqual(["enquiries", "clients", "quotations", "projects", "my-tasks", "attendance", "payroll", "expenses", "employees", "settings"]);
+    expect(visibleNavItems({ role: "admin" }).map((i) => i.key)).toEqual(["enquiries", "clients", "quotations", "projects", "factory-dashboard", "site-dashboard", "my-tasks", "attendance", "payroll", "expenses", "employees", "settings"]);
     expect(visibleNavItems({ role: "accountant" }).map((i) => i.key)).toEqual(["payroll", "expenses"]);
     expect(homeFor({ role: "accountant" })).toBe("/payroll");
     expect(homeFor({ role: "staff" })).toBe("/quotations");

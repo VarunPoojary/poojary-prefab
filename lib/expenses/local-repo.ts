@@ -1,3 +1,4 @@
+import { roleHasPage } from "@/lib/auth/roles";
 import type { Role } from "@/lib/auth/types";
 import { CrmNotFoundError, ValidationError } from "@/lib/crm/types";
 import { activeAdminIds } from "@/lib/employees/rules";
@@ -149,7 +150,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
       isAdmin,
       canView: isAdmin || manager,
       canRequest: isAdmin || (manager && (p.status === "active" || p.status === "on_hold")),
-      canPay: isAdmin || a.role === "accountant",
+      canPay: roleHasPage(a.role, "expenses"),
     };
   }
   private viewProject(projectId: string, a: Actor) {
@@ -176,7 +177,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
 
   async pageAccess(): Promise<ExpensePageAccess> {
     const a = await this.actor();
-    const ok = a.role === "admin" || a.role === "accountant";
+    const ok = roleHasPage(a.role, "expenses");
     return { canView: ok, isAdmin: a.role === "admin", canPay: ok };
   }
 
@@ -237,7 +238,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
   async list(filters: ExpenseFilters) {
     const a = await this.actor();
     if (filters.projectId) this.viewProject(filters.projectId, a);
-    else if (a.role !== "admin" && a.role !== "accountant") throw new ProjectForbiddenError("Only admins and the accountant can see all expenses.");
+    else if (!roleHasPage(a.role, "expenses")) throw new ProjectForbiddenError("Your role doesn't include the Expenses page.");
     const f = { ...filters, showDeleted: a.role === "admin" ? filters.showDeleted : false, status: a.role !== "admin" && filters.status === "deleted" ? undefined : filters.status };
     const names = new Map(this.o.people.employees().map((e) => [e.id, e.fullName]));
     const items = this.all()
@@ -249,7 +250,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
   async get(id: string) {
     const a = await this.actor();
     const e = this.find(this.all(), id);
-    if (a.role !== "accountant") this.viewProject(e.projectId, a);
+    if (!roleHasPage(a.role, "expenses")) this.viewProject(e.projectId, a);
     if (e.status === "deleted" && a.role !== "admin") throw new CrmNotFoundError("Expense", id);
     return clone(e);
   }
@@ -436,7 +437,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
 
   async pay(ids: string[], payment: ExpensePayment) {
     const a = await this.actor();
-    if (a.role !== "admin" && a.role !== "accountant") throw new ProjectForbiddenError("Only admins and the accountant can mark expenses as paid.");
+    if (!roleHasPage(a.role, "expenses")) throw new ProjectForbiddenError("Your role doesn't include the Expenses page, so it can't record payments.");
     const issues = paymentIssues(payment, this.today());
     if (issues.length) throw new ValidationError(issues);
     const pay = { ...payment, reference: payment.reference.trim() };
@@ -533,7 +534,7 @@ export class LocalExpenseRepository implements ExpenseRepository {
 
   async projectNames() {
     const a = await this.actor();
-    if (a.role !== "admin" && a.role !== "accountant") throw new ProjectForbiddenError("Only admins and the accountant can see all expenses.");
+    if (!roleHasPage(a.role, "expenses")) throw new ProjectForbiddenError("Your role doesn't include the Expenses page.");
     return this.o.projects.readAllProjects().map((p) => ({ id: p.id, code: p.code, name: p.name, status: p.status }));
   }
 

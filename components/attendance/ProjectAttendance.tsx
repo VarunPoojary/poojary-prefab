@@ -18,11 +18,13 @@ import type { Project } from "@/lib/projects/types";
 import { useSettings } from "@/lib/settings/hooks";
 import { AttendanceBadge, CountsText, fmtManDays } from "./bits";
 import { LogDialog } from "./LogDialog";
+import { Plus, TreePalm } from "lucide-react";
+import { Icon } from "@/components/ui/icons";
 
 function PeopleList({ title, people }: { title: string; people: DayPerson[] }) {
   return (
     <div>
-      <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <h5 className="mb-1 text-xs font-semibold text-slate-500">
         {title} ({people.length})
       </h5>
       {people.length ? (
@@ -51,17 +53,17 @@ function DayDetail({ project, date, canEdit, onEdit }: { project: Project; date:
   const day = data.siteDay;
   return (
     <div className="space-y-4 border-t border-slate-100 px-4 pb-4 pt-3" data-testid="day-detail">
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <PeopleList title="Employees" people={data.employees} />
         <PeopleList title="Casual workers" people={data.casual} />
       </div>
       {day?.photos.length ? (
         <div>
-          <h5 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Group photo</h5>
+          <h5 className="mb-1 text-xs font-semibold text-slate-500">Group photo</h5>
           <PhotoThumbs photos={day.photos} />
           <p className="mt-1 text-xs text-slate-500">
             {day.photos[0].takenAt ? `Taken ${formatDateTime(day.photos[0].takenAt)}` : `Uploaded ${formatDateTime(day.photos[0].uploadedAt)}`}
-            {day.photoDistanceM !== null ? ` · ${day.photoDistanceM > PHOTO_DISTANCE_WARN_M ? "⚠️ " : ""}${(day.photoDistanceM / 1000).toFixed(1)} km from the site pin` : ""}
+            {day.photoDistanceM !== null ? ` · ${day.photoDistanceM > PHOTO_DISTANCE_WARN_M ? "far: " : ""}${(day.photoDistanceM / 1000).toFixed(1)} km from the site pin` : ""}
           </p>
         </div>
       ) : day && !day.holiday ? (
@@ -100,7 +102,7 @@ function DayRow({ project, row, open, onToggle, canEdit, onLog }: { project: Pro
     return (
       <li className="flex items-center justify-between px-4 py-3 text-sm text-slate-500" data-testid="att-day" data-kind="holiday">
         <span>
-          <b>{dayLabel(row.date)}</b> <span className="ml-2">🏖️ Holiday</span>
+          <b>{dayLabel(row.date)}</b> <span className="ml-2"><Icon icon={TreePalm} size={14} className="mr-1 inline-block align-[-2px]" />Holiday</span>
         </span>
         <span className="text-xs">{row.loggedBy ? `by ${userName(row.loggedBy)}` : "Company holiday"}</span>
       </li>
@@ -199,7 +201,7 @@ export function ProjectAttendance({ p }: { p: Project }) {
         </div>
         {canLog ? (
           <Button variant="primary" onClick={() => setLog(today)}>
-            + Log attendance
+            <Icon icon={Plus} size={14} className="inline-block align-[-2px]" /> Log attendance
           </Button>
         ) : null}
       </div>
@@ -211,7 +213,7 @@ export function ProjectAttendance({ p }: { p: Project }) {
       ) : null}
 
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="hidden grid-cols-[9rem_1fr_1fr_6rem_14rem] gap-2 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
+        <div className="hidden grid-cols-[9rem_1fr_1fr_6rem_14rem] gap-2 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-500 md:grid">
           <span>Date</span>
           <span>Employees</span>
           <span>Casual workers</span>
